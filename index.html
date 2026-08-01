@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>일정관리</title>
+<link rel="stylesheet" as="style" crossorigin
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --bg:#f0f0f2;
+    --card:#ffffff;
+    --ink:#111114;
+    --muted:#8b8b93;
+    --line:#ebebee;
+    --accent:#111114;
+    --accent-ink:#ffffff;
+    --danger:#e0503c;
+    --danger-bg:#fdeceA;
+    --success:#2f9e63;
+    --success-bg:#e8f7ee;
+    --pending:#dd8a2c;
+    --pending-bg:#fdf1de;
+    --radius:20px;
+    --radius-sm:14px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    background:#dcdce0;
+    font-family:"Pretendard",-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    font-weight:300;
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+  }
+  .phone{
+    width:100%;
+    max-width:480px;
+    min-height:100vh;
+    height:100vh;
+    background:var(--bg);
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    overflow:hidden;
+  }
+  .config-banner{
+    background:#111114;color:#fff;font-size:12px;padding:10px 16px;
+    display:none; line-height:1.5;
+  }
+  .config-banner.show{display:block;}
+  .topbar{
+    padding:18px 20px 10px;
+    flex:none;
+  }
+  .topbar h1{margin:0;font-size:22px;font-weight:600;letter-spacing:-0.3px;}
+  .topbar p{margin:2px 0 0;color:var(--muted);font-size:13px;}
+
+  main.content{
+    flex:1;
+    overflow-y:auto;
+    padding:4px 20px 100px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* ---- Calendar ---- */
+  .month-nav{
+    display:flex;align-items:center;justify-content:space-between;
+    margin:10px 0 14px;
+  }
+  .month-nav .label{font-size:16px;font-weight:600;}
+  .nav-btn{
+    width:34px;height:34px;border-radius:50%;border:none;background:var(--card);
+    box-shadow:0 1px 3px rgba(0,0,0,0.08);
+    font-size:16px;color:var(--ink);display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+  }
+  .dow-row{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;color:var(--muted);font-size:12px;margin-bottom:6px;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);row-gap:6px;}
+  .cal-cell{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;height:44px;cursor:pointer;}
+  .cal-cell .num{
+    width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:14px;font-weight:300;
+  }
+  .cal-cell.today .num{border:1.5px solid var(--ink);}
+  .cal-cell.selected .num{background:var(--ink);color:var(--accent-ink);}
+  .cal-cell .dot{width:5px;height:5px;border-radius:50%;background:var(--ink);margin-top:2px;}
+  .cal-cell .dot.faint{background:#c7c7cc;}
+  .cal-cell.empty{visibility:hidden;}
+
+  .section-head{
+    display:flex;align-items:center;justify-content:space-between;
+    margin:22px 0 10px;
+  }
+  .section-head h2{font-size:15px;font-weight:600;margin:0;}
+  .mini-btn{
+    background:var(--ink);color:#fff;border:none;border-radius:999px;
+    padding:7px 14px;font-size:12px;font-weight:300;cursor:pointer;
+  }
+
+  /* ---- Cards ---- */
+  .card{
+    background:var(--card);border-radius:var(--radius-sm);
+    padding:14px 16px;margin-bottom:10px;
+    box-shadow:0 1px 4px rgba(0,0,0,0.05);
+    cursor:pointer;
+  }
+  .card .row-top{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .card .title{font-size:15px;font-weight:600;}
+  .card .title.cancelled{text-decoration:line-through;color:var(--muted);}
+  .card .loc{font-size:12.5px;color:var(--muted);margin-top:3px;}
+  .card .row-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:10px;}
+  .card .customer{font-size:12.5px;color:var(--muted);}
+  .card .amount{font-size:14.5px;font-weight:300;}
+  .badge{
+    font-size:11px;font-weight:300;padding:3px 9px;border-radius:999px;white-space:nowrap;
+  }
+  .badge.pending{background:var(--pending-bg);color:var(--pending);}
+  .badge.paid{background:var(--success-bg);color:var(--success);}
+  .badge.cancelled{background:var(--danger-bg);color:var(--danger);}
+  .empty-state{color:var(--muted);font-size:13px;text-align:center;padding:26px 0;}
+
+  /* ---- Week view ---- */
+  .day-group{margin-bottom:18px;}
+  .day-group .day-header{
+    display:flex;align-items:baseline;gap:8px;margin-bottom:8px;
+  }
+  .day-group .day-header .dname{font-size:14px;font-weight:600;}
+  .day-group .day-header .ddate{font-size:12.5px;color:var(--muted);}
+  .day-group.today .day-header .dname{color:var(--ink);}
+  .day-group.today .day-header .dname::after{content:" · 오늘";color:var(--pending);font-weight:300;font-size:11px;}
+  .day-empty{color:var(--muted);font-size:12.5px;padding:2px 0 4px;}
+
+  /* ---- Dashboard ---- */
+  .stat-card{
+    background:var(--ink);color:#fff;border-radius:var(--radius);
+    padding:20px;margin-bottom:12px;
+  }
+  .stat-card .label{font-size:13px;opacity:0.7;margin-bottom:6px;}
+  .stat-card .value{font-size:28px;font-weight:300;letter-spacing:-0.5px;}
+  .stat-card .sub{font-size:12px;opacity:0.6;margin-top:6px;}
+  .stat-card.light{background:var(--card);color:var(--ink);border:1px solid var(--line);}
+  .stat-card.light .label{opacity:1;color:var(--muted);}
+  .stat-card.light .sub{opacity:1;color:var(--muted);}
+  .stat-row{display:flex;gap:10px;}
+  .stat-row .stat-card{flex:1;padding:16px;}
+  .stat-row .value{font-size:20px;}
+
+  /* ---- FAB ---- */
+  .fab{
+    position:absolute;right:20px;bottom:96px;
+    width:52px;height:52px;border-radius:50%;
+    background:var(--ink);color:#fff;border:none;
+    font-size:26px;line-height:1;font-weight:300;
+    box-shadow:0 6px 16px rgba(0,0,0,0.25);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;z-index:20;
+  }
+
+  /* ---- Bottom nav ---- */
+  .bottomnav{
+    flex:none;display:flex;justify-content:space-around;align-items:center;
+    background:var(--card);border-top:1px solid var(--line);
+    padding:10px 10px calc(10px + env(safe-area-inset-bottom));
+  }
+  .nav-item{
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    background:none;border:none;color:var(--muted);font-size:11px;font-weight:300;
+    cursor:pointer;padding:4px 14px;border-radius:12px;
+  }
+  .nav-item.active{color:var(--ink);}
+  .nav-item svg{width:22px;height:22px;}
+
+  /* ---- Sheets / Modals ---- */
+  .sheet-overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,0.35);
+    display:none;align-items:flex-end;justify-content:center;z-index:50;
+  }
+  .sheet-overlay.show{display:flex;}
+  .sheet{
+    width:100%;max-width:480px;background:var(--bg);
+    border-radius:24px 24px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom));
+    max-height:88vh;overflow-y:auto;
+  }
+  .sheet-handle{width:36px;height:4px;background:#d8d8dc;border-radius:99px;margin:0 auto 14px;}
+  .sheet h3{margin:0 0 16px;font-size:17px;font-weight:600;}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:5px;font-weight:300;}
+  .field input, .field select{
+    width:100%;padding:12px 13px;border-radius:12px;border:1px solid var(--line);
+    background:#fff;font-size:14.5px;color:var(--ink);font-family:inherit;
+  }
+  .field .amount-wrap{position:relative;}
+  .field .amount-wrap span{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;}
+  .btn{
+    width:100%;padding:14px;border-radius:14px;border:none;font-size:15px;font-weight:300;
+    cursor:pointer;margin-top:6px;
+  }
+  .btn-primary{background:var(--ink);color:#fff;}
+  .btn-secondary{background:#fff;color:var(--ink);border:1px solid var(--line);}
+  .btn-danger{background:var(--danger-bg);color:var(--danger);}
+  .btn-success{background:var(--success-bg);color:var(--success);}
+  .btn-ghost{background:none;color:var(--muted);}
+
+  .detail-grid{margin-bottom:14px;}
+  .detail-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px;}
+  .detail-row:last-child{border-bottom:none;}
+  .detail-row .k{color:var(--muted);}
+  .detail-row .v{font-weight:300;text-align:right;}
+  .badge-row{display:flex;gap:6px;margin-bottom:14px;}
+
+  .confirm-box{
+    background:var(--danger-bg);border-radius:14px;padding:14px;margin-top:10px;
+  }
+  .confirm-box p{margin:0 0 10px;font-size:13.5px;color:var(--danger);font-weight:300;}
+  .confirm-actions{display:flex;gap:8px;}
+  .confirm-actions button{flex:1;margin-top:0;}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div id="configBanner" class="config-banner">
+    ⚠️ Supabase 연결이 설정되지 않았습니다. index.html 상단의 SUPABASE_URL / SUPABASE_ANON_KEY 를 입력해주세요.
+  </div>
+
+  <header class="topbar">
+    <h1>일정관리</h1>
+    <p id="todayLabel"></p>
+  </header>
+
+  <main class="content">
+
+    <!-- ===== 캘린더 탭 ===== -->
+    <section id="view-calendar" class="view active">
+      <div class="month-nav">
+        <button class="nav-btn" id="calPrev">‹</button>
+        <div class="label" id="calMonthLabel">-</div>
+        <button class="nav-btn" id="calNext">›</button>
+      </div>
+      <div class="dow-row">
+        <div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div><div>일</div>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+
+      <div class="section-head">
+        <h2 id="dayListTitle">일정</h2>
+        <button class="mini-btn" id="addFromDay">+ 새 일정</button>
+      </div>
+      <div id="dayList"></div>
+    </section>
+
+    <!-- ===== 이번주 탭 ===== -->
+    <section id="view-week" class="view">
+      <div class="section-head">
+        <h2 id="weekRangeLabel">이번주 일정</h2>
+      </div>
+      <div id="weekList"></div>
+    </section>
+
+    <!-- ===== 대시보드 탭 ===== -->
+    <section id="view-dashboard" class="view">
+      <div class="month-nav">
+        <button class="nav-btn" id="dashPrev">‹</button>
+        <div class="label" id="dashMonthLabel">-</div>
+        <button class="nav-btn" id="dashNext">›</button>
+      </div>
+
+      <div class="stat-card">
+        <div class="label">이번달 총 매출 (취소 제외)</div>
+        <div class="value" id="dashRevenue">₩0</div>
+        <div class="sub" id="dashRevenueSub">확정 0건</div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-card light">
+          <div class="label">입금 대기</div>
+          <div class="value" id="dashPendingAmount">₩0</div>
+          <div class="sub" id="dashPendingCount">0건</div>
+        </div>
+        <div class="stat-card light">
+          <div class="label">취소된 일정</div>
+          <div class="value" id="dashCancelledCount">0건</div>
+          <div class="sub" id="dashCancelledAmount">₩0</div>
+        </div>
+      </div>
+
+      <div class="section-head">
+        <h2>입금 대기 목록</h2>
+      </div>
+      <div id="dashPendingList"></div>
+    </section>
+
+  </main>
+
+  <button class="fab" id="fabAdd">+</button>
+
+  <nav class="bottomnav">
+    <button class="nav-item active" data-tab="calendar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      캘린더
+    </button>
+    <button class="nav-item" data-tab="week">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      이번주
+    </button>
+    <button class="nav-item" data-tab="dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+      대시보드
+    </button>
+  </nav>
+</div>
+
+<!-- ===== 일정 추가 모달 ===== -->
+<div class="sheet-overlay" id="modalAdd">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h3>새 일정 추가</h3>
+    <div class="field">
+      <label>날짜</label>
+      <input type="date" id="fDate" />
+    </div>
+    <div class="field">
+      <label>시간 (선택)</label>
+      <input type="time" id="fTime" />
+    </div>
+    <div class="field">
+      <label>제목</label>
+      <input type="text" id="fTitle" placeholder="예: 스튜디오 대여" />
+    </div>
+    <div class="field">
+      <label>위치</label>
+      <input type="text" id="fLocation" placeholder="예: 강남점" />
+    </div>
+    <div class="field">
+      <label>예약자 이름</label>
+      <input type="text" id="fCustomer" placeholder="예: 홍길동" />
+    </div>
+    <div class="field">
+      <label>금액</label>
+      <div class="amount-wrap">
+        <input type="number" id="fAmount" placeholder="0" inputmode="numeric" />
+        <span>원</span>
+      </div>
+    </div>
+    <div class="field">
+      <label>작성자</label>
+      <select id="fAuthor">
+        <option value="사장님">사장님</option>
+        <option value="직원1">직원1</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" id="saveBooking">저장</button>
+    <button class="btn btn-ghost" id="cancelAdd">취소</button>
+  </div>
+</div>
+
+<!-- ===== 상세 / 취소 / 입금확인 모달 ===== -->
+<div class="sheet-overlay" id="modalDetail">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h3 id="detailTitle">-</h3>
+    <div class="badge-row" id="detailBadges"></div>
+    <div class="detail-grid" id="detailGrid"></div>
+
+    <button class="btn btn-success" id="togglePaymentBtn">입금 완료로 표시</button>
+    <button class="btn btn-danger" id="cancelBookingBtn">일정 취소</button>
+    <button class="btn btn-secondary" id="restoreBookingBtn" style="display:none;">일정 취소 복구</button>
+
+    <div class="confirm-box" id="confirmBox" style="display:none;">
+      <p>정말 이 일정을 취소하시겠어요? 매출 합계에서 제외됩니다.</p>
+      <div class="confirm-actions">
+        <button class="btn btn-secondary" id="confirmCancelNo">아니요</button>
+        <button class="btn btn-danger" id="confirmCancelYes">취소 확정</button>
+      </div>
+    </div>
+
+    <button class="btn btn-ghost" id="closeDetail">닫기</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   CONFIG — Supabase 프로젝트 정보를 아래 두 줄에 입력하세요.
+   Supabase 대시보드 > Project Settings > API 에서 확인 가능합니다.
+   ============================================================ */
+const SUPABASE_URL = "https://jrrbohfnznkiqthaosbw.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpycmJvaGZuem5raXF0aGFvc2J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1NjgxMzQsImV4cCI6MjEwMTE0NDEzNH0.fN3KGayjlAbsR8rxrDgC6T1gcY2gFVgg8EJc1TWmwQI";
+
+let sb = null;
+const configured = SUPABASE_URL.startsWith("http") && SUPABASE_ANON_KEY.length > 20;
+if (configured) {
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+} else {
+  document.getElementById("configBanner").classList.add("show");
+}
+
+/* ------------------ 상태 ------------------ */
+let bookings = [];
+let currentTab = "calendar";
+let calendarCursor = new Date();
+let dashboardCursor = new Date();
+let selectedDate = toISODate(new Date());
+let activeDetailId = null;
+
+/* ------------------ 유틸 ------------------ */
+function pad(n){ return String(n).padStart(2,"0"); }
+function toISODate(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function parseISODate(s){ const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); }
+function fmtMoney(n){ return "₩" + Math.round(Number(n)||0).toLocaleString("ko-KR"); }
+const DOW_KR = ["일","월","화","수","목","금","토"];
+const DOW_KR_MON_FIRST = ["월","화","수","목","금","토","일"];
+
+function fmtDateLabel(d){
+  return `${d.getMonth()+1}월 ${d.getDate()}일 (${DOW_KR[d.getDay()]})`;
+}
+
+/* ------------------ 초기화 ------------------ */
+document.getElementById("todayLabel").textContent =
+  new Date().toLocaleDateString("ko-KR", { year:"numeric", month:"long", day:"numeric", weekday:"long" });
+
+document.getElementById("fDate").value = selectedDate;
+const lastAuthor = localStorage.getItem("lastAuthor");
+if (lastAuthor) document.getElementById("fAuthor").value = lastAuthor;
+
+async function fetchBookings(){
+  if (!sb) { renderAll(); return; }
+  const { data, error } = await sb
+    .from("bookings")
+    .select("*")
+    .order("date", { ascending:true })
+    .order("time", { ascending:true, nullsFirst:true });
+  if (error) { console.error(error); return; }
+  bookings = data || [];
+  renderAll();
+}
+
+function renderAll(){
+  renderCalendar();
+  renderDayList();
+  renderWeek();
+  renderDashboard();
+}
+
+/* ------------------ 탭 전환 ------------------ */
+document.querySelectorAll(".nav-item").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    currentTab = btn.dataset.tab;
+    document.querySelectorAll(".nav-item").forEach(b=>b.classList.toggle("active", b===btn));
+    document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+    document.getElementById("view-"+currentTab).classList.add("active");
+  });
+});
+
+/* ------------------ 캘린더 ------------------ */
+document.getElementById("calPrev").addEventListener("click", ()=>{
+  calendarCursor.setMonth(calendarCursor.getMonth()-1);
+  renderCalendar();
+});
+document.getElementById("calNext").addEventListener("click", ()=>{
+  calendarCursor.setMonth(calendarCursor.getMonth()+1);
+  renderCalendar();
+});
+
+function bookingsForDate(iso){
+  return bookings.filter(b=>b.date===iso);
+}
+
+function renderCalendar(){
+  const y = calendarCursor.getFullYear();
+  const m = calendarCursor.getMonth();
+  document.getElementById("calMonthLabel").textContent = `${y}년 ${m+1}월`;
+
+  const firstDay = new Date(y, m, 1);
+  const offset = (firstDay.getDay() + 6) % 7; // 월요일 시작
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const todayISO = toISODate(new Date());
+
+  const grid = document.getElementById("calGrid");
+  grid.innerHTML = "";
+
+  for (let i=0; i<offset; i++){
+    const empty = document.createElement("div");
+    empty.className = "cal-cell empty";
+    grid.appendChild(empty);
+  }
+
+  for (let day=1; day<=daysInMonth; day++){
+    const dateObj = new Date(y, m, day);
+    const iso = toISODate(dateObj);
+    const cell = document.createElement("div");
+    cell.className = "cal-cell";
+    if (iso === todayISO) cell.classList.add("today");
+    if (iso === selectedDate) cell.classList.add("selected");
+
+    const dayBookings = bookingsForDate(iso);
+    const hasConfirmed = dayBookings.some(b=>b.status==="confirmed");
+    const hasOnlyCancelled = dayBookings.length>0 && !hasConfirmed;
+
+    cell.innerHTML = `<div class="num">${day}</div>` +
+      (hasConfirmed ? `<div class="dot"></div>` : (hasOnlyCancelled ? `<div class="dot faint"></div>` : ""));
+
+    cell.addEventListener("click", ()=>{
+      selectedDate = iso;
+      renderCalendar();
+      renderDayList();
+    });
+    grid.appendChild(cell);
+  }
+}
+
+function renderDayList(){
+  const d = parseISODate(selectedDate);
+  document.getElementById("dayListTitle").textContent = fmtDateLabel(d) + " 일정";
+  const list = bookingsForDate(selectedDate);
+  const container = document.getElementById("dayList");
+  container.innerHTML = "";
+  if (list.length === 0){
+    container.innerHTML = `<div class="empty-state">이 날짜에 일정이 없습니다.</div>`;
+    return;
+  }
+  list.forEach(b => container.appendChild(bookingCard(b)));
+}
+
+/* ------------------ 이번주 ------------------ */
+function renderWeek(){
+  const today = new Date();
+  const dow = (today.getDay()+6)%7; // 월=0
+  const monday = new Date(today);
+  monday.setDate(today.getDate()-dow);
+
+  const days = [];
+  for (let i=0;i<7;i++){
+    const d = new Date(monday);
+    d.setDate(monday.getDate()+i);
+    days.push(d);
+  }
+  const first = days[0], last = days[6];
+  document.getElementById("weekRangeLabel").textContent =
+    `이번주 일정 (${first.getMonth()+1}/${first.getDate()} ~ ${last.getMonth()+1}/${last.getDate()})`;
+
+  const container = document.getElementById("weekList");
+  container.innerHTML = "";
+  const todayISO = toISODate(today);
+
+  days.forEach(d=>{
+    const iso = toISODate(d);
+    const group = document.createElement("div");
+    group.className = "day-group" + (iso===todayISO ? " today" : "");
+    group.innerHTML = `
+      <div class="day-header">
+        <span class="dname">${DOW_KR_MON_FIRST[(d.getDay()+6)%7]}요일</span>
+        <span class="ddate">${d.getMonth()+1}월 ${d.getDate()}일</span>
+      </div>
+      <div class="day-body"></div>
+    `;
+    const body = group.querySelector(".day-body");
+    const dayBookings = bookingsForDate(iso);
+    if (dayBookings.length===0){
+      body.innerHTML = `<div class="day-empty">일정 없음</div>`;
+    } else {
+      dayBookings.forEach(b=> body.appendChild(bookingCard(b)));
+    }
+    container.appendChild(group);
+  });
+}
+
+/* ------------------ 대시보드 ------------------ */
+document.getElementById("dashPrev").addEventListener("click", ()=>{
+  dashboardCursor.setMonth(dashboardCursor.getMonth()-1);
+  renderDashboard();
+});
+document.getElementById("dashNext").addEventListener("click", ()=>{
+  dashboardCursor.setMonth(dashboardCursor.getMonth()+1);
+  renderDashboard();
+});
+
+function renderDashboard(){
+  const y = dashboardCursor.getFullYear();
+  const m = dashboardCursor.getMonth();
+  document.getElementById("dashMonthLabel").textContent = `${y}년 ${m+1}월`;
+
+  const monthBookings = bookings.filter(b=>{
+    const d = parseISODate(b.date);
+    return d.getFullYear()===y && d.getMonth()===m;
+  });
+
+  const confirmed = monthBookings.filter(b=>b.status==="confirmed");
+  const cancelled = monthBookings.filter(b=>b.status==="cancelled");
+  const pending = confirmed.filter(b=>b.payment_status==="pending");
+
+  const revenue = confirmed.reduce((s,b)=>s+Number(b.amount||0),0);
+  const pendingAmount = pending.reduce((s,b)=>s+Number(b.amount||0),0);
+  const cancelledAmount = cancelled.reduce((s,b)=>s+Number(b.amount||0),0);
+
+  document.getElementById("dashRevenue").textContent = fmtMoney(revenue);
+  document.getElementById("dashRevenueSub").textContent = `확정 ${confirmed.length}건`;
+  document.getElementById("dashPendingAmount").textContent = fmtMoney(pendingAmount);
+  document.getElementById("dashPendingCount").textContent = `${pending.length}건`;
+  document.getElementById("dashCancelledCount").textContent = `${cancelled.length}건`;
+  document.getElementById("dashCancelledAmount").textContent = fmtMoney(cancelledAmount);
+
+  const listEl = document.getElementById("dashPendingList");
+  listEl.innerHTML = "";
+  if (pending.length===0){
+    listEl.innerHTML = `<div class="empty-state">입금 대기 중인 일정이 없습니다.</div>`;
+  } else {
+    pending.forEach(b=> listEl.appendChild(bookingCard(b)));
+  }
+}
+
+/* ------------------ 카드 컴포넌트 ------------------ */
+function bookingCard(b){
+  const card = document.createElement("div");
+  card.className = "card";
+  const isCancelled = b.status==="cancelled";
+  const payBadge = isCancelled ? "" :
+    (b.payment_status==="paid"
+      ? `<span class="badge paid">입금완료</span>`
+      : `<span class="badge pending">입금대기</span>`);
+  const cancelBadge = isCancelled ? `<span class="badge cancelled">취소됨</span>` : "";
+
+  card.innerHTML = `
+    <div class="row-top">
+      <div class="title ${isCancelled?'cancelled':''}">${escapeHtml(b.title||"(제목 없음)")}</div>
+      ${cancelBadge || payBadge}
+    </div>
+    ${b.location ? `<div class="loc">📍 ${escapeHtml(b.location)}</div>` : ""}
+    <div class="row-bottom">
+      <div class="customer">${escapeHtml(b.customer_name||"-")}${b.time ? " · "+b.time.slice(0,5) : ""}</div>
+      <div class="amount">${fmtMoney(b.amount)}</div>
+    </div>
+  `;
+  card.addEventListener("click", ()=> openDetail(b));
+  return card;
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]));
+}
+
+/* ------------------ 일정 추가 모달 ------------------ */
+const modalAdd = document.getElementById("modalAdd");
+document.getElementById("fabAdd").addEventListener("click", openAddModal);
+document.getElementById("addFromDay").addEventListener("click", openAddModal);
+document.getElementById("cancelAdd").addEventListener("click", ()=> modalAdd.classList.remove("show"));
+
+function openAddModal(){
+  document.getElementById("fDate").value = selectedDate || toISODate(new Date());
+  document.getElementById("fTime").value = "";
+  document.getElementById("fTitle").value = "";
+  document.getElementById("fLocation").value = "";
+  document.getElementById("fCustomer").value = "";
+  document.getElementById("fAmount").value = "";
+  modalAdd.classList.add("show");
+}
+
+document.getElementById("saveBooking").addEventListener("click", async ()=>{
+  const date = document.getElementById("fDate").value;
+  const time = document.getElementById("fTime").value || null;
+  const title = document.getElementById("fTitle").value.trim();
+  const location = document.getElementById("fLocation").value.trim();
+  const customer_name = document.getElementById("fCustomer").value.trim();
+  const amount = Number(document.getElementById("fAmount").value || 0);
+  const created_by = document.getElementById("fAuthor").value;
+
+  if (!date || !title){
+    alert("날짜와 제목은 필수입니다.");
+    return;
+  }
+  localStorage.setItem("lastAuthor", created_by);
+
+  if (!sb){
+    alert("Supabase 연결이 설정되지 않아 저장할 수 없습니다.\nindex.html 상단 CONFIG를 확인해주세요.");
+    return;
+  }
+
+  const { error } = await sb.from("bookings").insert([{
+    date, time, title, location, customer_name, amount,
+    created_by, status:"confirmed", payment_status:"pending"
+  }]);
+  if (error){ alert("저장 실패: " + error.message); return; }
+
+  modalAdd.classList.remove("show");
+  selectedDate = date;
+  await fetchBookings();
+});
+
+/* ------------------ 상세 모달 ------------------ */
+const modalDetail = document.getElementById("modalDetail");
+document.getElementById("closeDetail").addEventListener("click", ()=>{
+  modalDetail.classList.remove("show");
+  document.getElementById("confirmBox").style.display = "none";
+});
+
+function openDetail(b){
+  activeDetailId = b.id;
+  document.getElementById("detailTitle").textContent = b.title || "(제목 없음)";
+
+  const badges = document.getElementById("detailBadges");
+  badges.innerHTML = "";
+  if (b.status==="cancelled"){
+    badges.innerHTML = `<span class="badge cancelled">취소됨</span>`;
+  } else {
+    badges.innerHTML = b.payment_status==="paid"
+      ? `<span class="badge paid">입금완료</span>`
+      : `<span class="badge pending">입금대기</span>`;
+  }
+
+  const d = parseISODate(b.date);
+  document.getElementById("detailGrid").innerHTML = `
+    <div class="detail-row"><div class="k">날짜</div><div class="v">${fmtDateLabel(d)}</div></div>
+    ${b.time ? `<div class="detail-row"><div class="k">시간</div><div class="v">${b.time.slice(0,5)}</div></div>` : ""}
+    <div class="detail-row"><div class="k">위치</div><div class="v">${escapeHtml(b.location||"-")}</div></div>
+    <div class="detail-row"><div class="k">예약자</div><div class="v">${escapeHtml(b.customer_name||"-")}</div></div>
+    <div class="detail-row"><div class="k">금액</div><div class="v">${fmtMoney(b.amount)}</div></div>
+    <div class="detail-row"><div class="k">작성자</div><div class="v">${escapeHtml(b.created_by||"-")}</div></div>
+  `;
+
+  const isCancelled = b.status==="cancelled";
+  document.getElementById("togglePaymentBtn").style.display = isCancelled ? "none" : "block";
+  document.getElementById("togglePaymentBtn").textContent =
+    b.payment_status==="paid" ? "입금 대기로 되돌리기" : "입금 완료로 표시";
+  document.getElementById("cancelBookingBtn").style.display = isCancelled ? "none" : "block";
+  document.getElementById("restoreBookingBtn").style.display = isCancelled ? "block" : "none";
+  document.getElementById("confirmBox").style.display = "none";
+
+  modalDetail.classList.add("show");
+}
+
+document.getElementById("togglePaymentBtn").addEventListener("click", async ()=>{
+  const b = bookings.find(x=>x.id===activeDetailId);
+  if (!b || !sb) return;
+  const newStatus = b.payment_status==="paid" ? "pending" : "paid";
+  const { error } = await sb.from("bookings").update({ payment_status:newStatus }).eq("id", b.id);
+  if (error){ alert("업데이트 실패: " + error.message); return; }
+  modalDetail.classList.remove("show");
+  await fetchBookings();
+});
+
+document.getElementById("cancelBookingBtn").addEventListener("click", ()=>{
+  document.getElementById("confirmBox").style.display = "block";
+});
+document.getElementById("confirmCancelNo").addEventListener("click", ()=>{
+  document.getElementById("confirmBox").style.display = "none";
+});
+document.getElementById("confirmCancelYes").addEventListener("click", async ()=>{
+  const b = bookings.find(x=>x.id===activeDetailId);
+  if (!b || !sb) return;
+  const { error } = await sb.from("bookings").update({ status:"cancelled" }).eq("id", b.id);
+  if (error){ alert("취소 실패: " + error.message); return; }
+  modalDetail.classList.remove("show");
+  document.getElementById("confirmBox").style.display = "none";
+  await fetchBookings();
+});
+
+document.getElementById("restoreBookingBtn").addEventListener("click", async ()=>{
+  const b = bookings.find(x=>x.id===activeDetailId);
+  if (!b || !sb) return;
+  const { error } = await sb.from("bookings").update({ status:"confirmed" }).eq("id", b.id);
+  if (error){ alert("복구 실패: " + error.message); return; }
+  modalDetail.classList.remove("show");
+  await fetchBookings();
+});
+
+/* ------------------ 실시간 동기화 ------------------ */
+if (sb){
+  sb.channel("bookings-realtime")
+    .on("postgres_changes", { event:"*", schema:"public", table:"bookings" }, ()=>{
+      fetchBookings();
+    })
+    .subscribe();
+}
+
+/* ------------------ 시작 ------------------ */
+fetchBookings();
+</script>
+</body>
+</html>

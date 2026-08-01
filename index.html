@@ -238,6 +238,19 @@
   .field .amount-wrap{position:relative;}
   .field .amount-wrap span{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;}
 
+  /* ---- 시간 선택 칩 ---- */
+  .time-chip-row{
+    display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;
+  }
+  .time-chip-row::-webkit-scrollbar{display:none;}
+  .time-chip{
+    flex:none;padding:10px 16px;border-radius:999px;border:1px solid var(--line);
+    background:var(--card);font-size:13.5px;font-weight:300;color:var(--ink);
+    cursor:pointer;white-space:nowrap;
+  }
+  .time-chip.active{background:var(--nav);color:#fff;border-color:var(--nav);font-weight:600;}
+
   .btn{
     width:100%;padding:14px;border-radius:999px;border:none;font-size:14.5px;font-weight:300;
     cursor:pointer;margin-top:8px;
@@ -387,15 +400,13 @@
       </button>
     </div>
 
-    <div class="field-row">
-      <div class="field">
-        <label>날짜</label>
-        <input type="date" id="fDate" />
-      </div>
-      <div class="field">
-        <label>시간 (선택)</label>
-        <input type="time" id="fTime" />
-      </div>
+    <div class="field">
+      <label>날짜</label>
+      <input type="date" id="fDate" />
+    </div>
+    <div class="field">
+      <label>시간 (선택)</label>
+      <div class="time-chip-row" id="timeChipRow"></div>
     </div>
     <div class="field">
       <label>제목</label>
@@ -489,6 +500,11 @@ let activeDetailId = null;
 let editingId = null;
 let confirmMode = "cancel"; // "cancel" | "delete"
 let summaryMode = "week"; // "today" | "week"
+let selectedTime = ""; // "" = 종일, else "HH:MM"
+
+/* 시간 선택 칩 목록: 종일 + 07:00 ~ 21:00 (1시간 단위) */
+const TIME_SLOTS = ["종일"];
+for (let h=7; h<=21; h++){ TIME_SLOTS.push(`${pad(h)}:00`); }
 
 /* ------------------ 유틸 ------------------ */
 function pad(n){ return String(n).padStart(2,"0"); }
@@ -511,11 +527,30 @@ function statusTag(b){
     : `<span class="tag pending">${ICON_CLOCK}입금대기</span>`;
 }
 
+/* ------------------ 시간 선택 칩 렌더 ------------------ */
+function renderTimeChips(){
+  const row = document.getElementById("timeChipRow");
+  row.innerHTML = "";
+  TIME_SLOTS.forEach(slot=>{
+    const val = slot === "종일" ? "" : slot;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "time-chip" + (selectedTime === val ? " active" : "");
+    btn.textContent = slot;
+    btn.addEventListener("click", ()=>{
+      selectedTime = val;
+      renderTimeChips();
+    });
+    row.appendChild(btn);
+  });
+}
+
 /* ------------------ 초기화 ------------------ */
 document.getElementById("todayLabel").textContent =
   new Date().toLocaleDateString("ko-KR", { year:"numeric", month:"long", day:"numeric", weekday:"long" });
 
 document.getElementById("fDate").value = selectedDate;
+renderTimeChips();
 
 async function fetchBookings(){
   if (!sb) { renderAll(); return; }
@@ -788,7 +823,7 @@ function openAddModal(editBooking){
     editingId = editBooking.id;
     document.getElementById("addModalTitle").textContent = "일정 수정";
     document.getElementById("fDate").value = editBooking.date;
-    document.getElementById("fTime").value = editBooking.time ? editBooking.time.slice(0,5) : "";
+    selectedTime = editBooking.time ? editBooking.time.slice(0,5) : "";
     document.getElementById("fTitle").value = editBooking.title || "";
     document.getElementById("fLocation").value = editBooking.location || "";
     document.getElementById("fCustomer").value = editBooking.customer_name || "";
@@ -797,18 +832,19 @@ function openAddModal(editBooking){
     editingId = null;
     document.getElementById("addModalTitle").textContent = "새 일정 추가";
     document.getElementById("fDate").value = selectedDate || toISODate(new Date());
-    document.getElementById("fTime").value = "";
+    selectedTime = "";
     document.getElementById("fTitle").value = "";
     document.getElementById("fLocation").value = "";
     document.getElementById("fCustomer").value = "";
     document.getElementById("fAmount").value = "";
   }
+  renderTimeChips();
   modalAdd.classList.add("show");
 }
 
 document.getElementById("saveBooking").addEventListener("click", async ()=>{
   const date = document.getElementById("fDate").value;
-  const time = document.getElementById("fTime").value || null;
+  const time = selectedTime || null;
   const title = document.getElementById("fTitle").value.trim();
   const location = document.getElementById("fLocation").value.trim();
   const customer_name = document.getElementById("fCustomer").value.trim();

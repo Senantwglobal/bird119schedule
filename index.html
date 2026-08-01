@@ -20,14 +20,14 @@
     --soft:#f5f5f4;
     --ink:#17171a;
     --muted:#9a9aa1;
-    --line:#eeeeec;
+    --line:#e9e9e6;
     --nav:#18181b;
-    --paid:#2fa66a;
-    --paid-bg:#e8f7ee;
-    --pending:#e9a23c;
-    --pending-bg:#fdf2e0;
-    --cancelled:#ef5654;
-    --cancelled-bg:#fdeaea;
+    --paid:#1f9254;
+    --paid-bg:#e6f6ec;
+    --pending:#b45f09;
+    --pending-bg:#fdf1de;
+    --cancelled:#e5484d;
+    --cancelled-bg:#fdecec;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;height:100%;}
@@ -71,9 +71,6 @@
   .view{display:none;}
   .view.active{display:block;}
 
-  /* ---- Small colored dot used across UI ---- */
-  .dot-ic{width:6px;height:6px;border-radius:50%;flex:none;display:inline-block;}
-
   /* ---- Calendar ---- */
   .month-nav{
     display:flex;align-items:center;justify-content:space-between;
@@ -81,8 +78,7 @@
   }
   .month-nav .label{font-size:16px;font-weight:600;}
   .nav-btn{
-    width:34px;height:34px;border-radius:50%;border:none;background:var(--card);
-    box-shadow:0 1px 3px rgba(0,0,0,0.06);
+    width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--card);
     font-size:15px;color:var(--ink);display:flex;align-items:center;justify-content:center;
     cursor:pointer;
   }
@@ -108,33 +104,62 @@
     padding:8px 15px;font-size:12px;font-weight:300;cursor:pointer;
   }
 
+  /* ---- Tags (상태 pill) ---- */
+  .tag-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+  .tag{
+    display:inline-flex;align-items:center;gap:5px;
+    font-size:11.5px;font-weight:500;
+    padding:5px 10px 5px 8px;border-radius:999px;white-space:nowrap;
+  }
+  .tag svg{width:11px;height:11px;flex:none;}
+  .tag.paid{background:var(--paid-bg);color:var(--paid);}
+  .tag.pending{background:var(--pending-bg);color:var(--pending);}
+  .tag.cancelled{background:var(--cancelled-bg);color:var(--cancelled);}
+  .tag.neutral{background:var(--soft);color:var(--muted);font-weight:300;padding:5px 10px;}
+
   /* ---- Cards (심플/플랫, 애플 스타일) ---- */
   .card{
-    background:var(--card);border-radius:20px;
+    background:var(--card);border:1px solid var(--line);border-radius:20px;
     padding:16px 18px;margin-bottom:10px;
     cursor:pointer;
   }
-  .card .row-top{display:flex;align-items:center;justify-content:space-between;gap:8px;}
-  .card .title{font-size:15.5px;font-weight:600;}
+  .card .title{font-size:15px;font-weight:600;margin-top:10px;}
   .card .title.cancelled{text-decoration:line-through;color:var(--muted);}
-  .card .loc{font-size:12.5px;color:var(--muted);margin-top:4px;}
-  .card .row-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:12px;}
-  .card .customer{font-size:12.5px;color:var(--muted);}
-  .card .amount{font-size:14.5px;font-weight:600;}
+  .card .row-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:8px;gap:8px;}
+  .card .customer{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .card .amount{font-size:14px;font-weight:600;flex:none;}
 
-  .tag{
-    display:inline-flex;align-items:center;gap:6px;
-    font-size:11.5px;color:var(--muted);font-weight:300;white-space:nowrap;
+  /* ---- Compact card (일정 요약 탭) ---- */
+  .card-compact{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:11px 14px;margin-bottom:8px;cursor:pointer;
   }
+  .card-compact .left{display:flex;align-items:center;gap:10px;min-width:0;}
+  .card-compact .time{font-size:11.5px;color:var(--muted);font-weight:300;flex:none;width:36px;}
+  .card-compact .title{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .card-compact .title.cancelled{text-decoration:line-through;color:var(--muted);}
+  .card-compact .right{display:flex;align-items:center;gap:8px;flex:none;}
+  .card-compact .amount{font-size:12.5px;font-weight:600;color:var(--muted);}
+  .card-compact .dot{width:7px;height:7px;border-radius:50%;flex:none;}
+
   .empty-state{color:var(--muted);font-size:13px;text-align:center;padding:30px 0;}
 
-  /* ---- Week view ---- */
-  .day-group{margin-bottom:20px;}
-  .day-group .day-header{
-    display:flex;align-items:baseline;gap:8px;margin-bottom:9px;padding-left:2px;
+  /* ---- 일정 요약 세그먼트 ---- */
+  .seg2{display:flex;gap:4px;margin:12px 0 4px;}
+  .seg2 button{
+    padding:8px 16px;border-radius:12px;font-size:13.5px;font-weight:300;color:var(--muted);
+    background:none;border:none;cursor:pointer;
   }
-  .day-group .day-header .dname{font-size:14px;font-weight:600;}
-  .day-group .day-header .ddate{font-size:12.5px;color:var(--muted);}
+  .seg2 button.active{background:var(--soft);color:var(--ink);font-weight:600;}
+
+  /* ---- Week view ---- */
+  .day-group{margin-bottom:18px;}
+  .day-group .day-header{
+    display:flex;align-items:baseline;gap:8px;margin-bottom:8px;padding-left:2px;
+  }
+  .day-group .day-header .dname{font-size:13.5px;font-weight:600;}
+  .day-group .day-header .ddate{font-size:12px;color:var(--muted);}
   .day-group.today .day-header .dname{color:var(--ink);}
   .day-group.today .day-header .dname::after{content:" · 오늘";color:var(--pending);font-weight:300;font-size:11px;}
   .day-empty{color:var(--muted);font-size:12.5px;padding:2px 0 6px 2px;}
@@ -147,7 +172,7 @@
   .stat-card .label{font-size:12.5px;opacity:0.65;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
   .stat-card .value{font-size:29px;font-weight:600;letter-spacing:-0.6px;}
   .stat-card .sub{font-size:12px;opacity:0.55;margin-top:6px;}
-  .stat-card.light{background:var(--card);color:var(--ink);}
+  .stat-card.light{background:var(--card);color:var(--ink);border:1px solid var(--line);}
   .stat-card.light .label{opacity:1;color:var(--muted);}
   .stat-card.light .sub{opacity:1;color:var(--muted);}
   .stat-row{display:flex;gap:10px;}
@@ -193,11 +218,10 @@
   .sheet-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
   .sheet-topbar h3{margin:0;font-size:16px;font-weight:600;}
   .icon-btn{
-    width:36px;height:36px;border-radius:50%;border:none;background:var(--card);
-    box-shadow:0 1px 3px rgba(0,0,0,0.07);
+    width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--card);
     display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);
   }
-  .icon-btn.dark{background:var(--nav);color:#fff;}
+  .icon-btn.dark{background:var(--nav);color:#fff;border-color:var(--nav);}
   .icon-btn svg{width:16px;height:16px;}
 
   .field{margin-bottom:12px;}
@@ -205,8 +229,8 @@
   .field-row .field{flex:1;}
   .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:300;}
   .field input{
-    width:100%;padding:13px 14px;border-radius:14px;border:none;
-    background:var(--soft);font-size:14.5px;color:var(--ink);font-family:inherit;font-weight:300;
+    width:100%;padding:12px 14px;border-radius:14px;border:1px solid var(--line);
+    background:var(--card);font-size:14.5px;color:var(--ink);font-family:inherit;font-weight:300;
   }
   .field .amount-wrap{position:relative;}
   .field .amount-wrap span{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;}
@@ -216,11 +240,11 @@
     cursor:pointer;margin-top:8px;
   }
   .btn-primary{background:var(--nav);color:#fff;}
-  .btn-secondary{background:var(--card);color:var(--ink);}
+  .btn-secondary{background:var(--card);color:var(--ink);border:1px solid var(--line);}
   .btn-danger{background:var(--cancelled-bg);color:var(--cancelled);}
   .btn-ghost{background:none;color:var(--muted);}
 
-  .detail-grid{margin:4px 0 14px;background:var(--card);border-radius:18px;padding:4px 16px;}
+  .detail-grid{margin:4px 0 14px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:4px 16px;}
   .detail-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
   .detail-row:last-child{border-bottom:none;}
   .detail-row .k{color:var(--muted);}
@@ -229,7 +253,7 @@
 
   .switch-row{
     display:flex;align-items:center;justify-content:space-between;
-    background:var(--card);border-radius:18px;padding:14px 16px;margin-bottom:10px;cursor:pointer;
+    background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:10px;cursor:pointer;
   }
   .switch-row .switch-label{font-size:14px;font-weight:600;}
   .switch-row .switch-sub{font-size:12px;color:var(--muted);margin-top:2px;font-weight:300;}
@@ -281,10 +305,14 @@
       <div id="dayList"></div>
     </section>
 
-    <!-- ===== 이번주 탭 ===== -->
+    <!-- ===== 일정 요약 탭 ===== -->
     <section id="view-week" class="view">
-      <div class="section-head">
-        <h2 id="weekRangeLabel">이번주 일정</h2>
+      <div class="seg2" id="summarySeg">
+        <button type="button" data-mode="today">오늘</button>
+        <button type="button" data-mode="week" class="active">이번주</button>
+      </div>
+      <div class="section-head" style="margin-top:6px;">
+        <h2 id="weekRangeLabel">일정 요약</h2>
       </div>
       <div id="weekList"></div>
     </section>
@@ -305,12 +333,12 @@
 
       <div class="stat-row">
         <div class="stat-card light">
-          <div class="label"><span class="dot-ic" style="background:var(--pending)"></span>입금 대기</div>
+          <div class="label"><span style="width:6px;height:6px;border-radius:50%;background:var(--pending);display:inline-block;"></span>입금 대기</div>
           <div class="value" id="dashPendingAmount">₩0</div>
           <div class="sub" id="dashPendingCount">0건</div>
         </div>
         <div class="stat-card light">
-          <div class="label"><span class="dot-ic" style="background:var(--cancelled)"></span>취소된 일정</div>
+          <div class="label"><span style="width:6px;height:6px;border-radius:50%;background:var(--cancelled);display:inline-block;"></span>취소된 일정</div>
           <div class="value" id="dashCancelledCount">0건</div>
           <div class="sub" id="dashCancelledAmount">₩0</div>
         </div>
@@ -332,7 +360,7 @@
       </button>
       <button class="nav-item" data-tab="week">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-        이번주
+        일정 요약
       </button>
       <button class="nav-fab" id="fabAdd">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -446,6 +474,11 @@ if (configured) {
   document.getElementById("configBanner").classList.add("show");
 }
 
+/* ------------------ 아이콘 ------------------ */
+const ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+const ICON_CLOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>';
+const ICON_X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+
 /* ------------------ 상태 ------------------ */
 let bookings = [];
 let currentTab = "calendar";
@@ -455,6 +488,7 @@ let selectedDate = toISODate(new Date());
 let activeDetailId = null;
 let editingId = null;
 let confirmMode = "cancel"; // "cancel" | "delete"
+let summaryMode = "week"; // "today" | "week"
 
 /* ------------------ 유틸 ------------------ */
 function pad(n){ return String(n).padStart(2,"0"); }
@@ -466,6 +500,15 @@ const DOW_KR_MON_FIRST = ["월","화","수","목","금","토","일"];
 
 function fmtDateLabel(d){
   return `${d.getMonth()+1}월 ${d.getDate()}일 (${DOW_KR[d.getDay()]})`;
+}
+
+function statusTag(b){
+  const isCancelled = b.status === "cancelled";
+  if (isCancelled) return `<span class="tag cancelled">${ICON_X}취소됨</span>`;
+  const paid = b.payment_status === "paid";
+  return paid
+    ? `<span class="tag paid">${ICON_CHECK}입금완료</span>`
+    : `<span class="tag pending">${ICON_CLOCK}입금대기</span>`;
 }
 
 /* ------------------ 초기화 ------------------ */
@@ -489,7 +532,7 @@ async function fetchBookings(){
 function renderAll(){
   renderCalendar();
   renderDayList();
-  renderWeek();
+  renderSummary();
   renderDashboard();
 }
 
@@ -578,44 +621,64 @@ function renderDayList(){
   list.forEach(b => container.appendChild(bookingCard(b)));
 }
 
-/* ------------------ 이번주 ------------------ */
-function renderWeek(){
-  const today = new Date();
-  const dow = (today.getDay()+6)%7; // 월=0
-  const monday = new Date(today);
-  monday.setDate(today.getDate()-dow);
+/* ------------------ 일정 요약 (오늘 / 이번주) ------------------ */
+document.querySelectorAll("#summarySeg button").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    summaryMode = btn.dataset.mode;
+    document.querySelectorAll("#summarySeg button").forEach(b=>b.classList.toggle("active", b===btn));
+    renderSummary();
+  });
+});
 
-  const days = [];
-  for (let i=0;i<7;i++){
-    const d = new Date(monday);
-    d.setDate(monday.getDate()+i);
-    days.push(d);
+function renderSummary(){
+  const today = new Date();
+  const todayISO = toISODate(today);
+  let days;
+
+  if (summaryMode === "today"){
+    days = [today];
+    document.getElementById("weekRangeLabel").textContent = `오늘 일정 (${today.getMonth()+1}/${today.getDate()})`;
+  } else {
+    const dow = (today.getDay()+6)%7;
+    const monday = new Date(today);
+    monday.setDate(today.getDate()-dow);
+    days = [];
+    for (let i=0;i<7;i++){
+      const d = new Date(monday);
+      d.setDate(monday.getDate()+i);
+      days.push(d);
+    }
+    const first = days[0], last = days[6];
+    document.getElementById("weekRangeLabel").textContent =
+      `이번주 일정 (${first.getMonth()+1}/${first.getDate()} ~ ${last.getMonth()+1}/${last.getDate()})`;
   }
-  const first = days[0], last = days[6];
-  document.getElementById("weekRangeLabel").textContent =
-    `이번주 일정 (${first.getMonth()+1}/${first.getDate()} ~ ${last.getMonth()+1}/${last.getDate()})`;
 
   const container = document.getElementById("weekList");
   container.innerHTML = "";
-  const todayISO = toISODate(today);
 
   days.forEach(d=>{
     const iso = toISODate(d);
     const group = document.createElement("div");
     group.className = "day-group" + (iso===todayISO ? " today" : "");
-    group.innerHTML = `
-      <div class="day-header">
-        <span class="dname">${DOW_KR_MON_FIRST[(d.getDay()+6)%7]}요일</span>
-        <span class="ddate">${d.getMonth()+1}월 ${d.getDate()}일</span>
-      </div>
-      <div class="day-body"></div>
-    `;
+
+    if (summaryMode === "week"){
+      group.innerHTML = `
+        <div class="day-header">
+          <span class="dname">${DOW_KR_MON_FIRST[(d.getDay()+6)%7]}요일</span>
+          <span class="ddate">${d.getMonth()+1}월 ${d.getDate()}일</span>
+        </div>
+        <div class="day-body"></div>
+      `;
+    } else {
+      group.innerHTML = `<div class="day-body"></div>`;
+    }
+
     const body = group.querySelector(".day-body");
     const dayBookings = bookingsForDate(iso);
     if (dayBookings.length===0){
       body.innerHTML = `<div class="day-empty">일정 없음</div>`;
     } else {
-      dayBookings.forEach(b=> body.appendChild(bookingCard(b)));
+      dayBookings.forEach(b=> body.appendChild(bookingCardCompact(b)));
     }
     container.appendChild(group);
   });
@@ -665,26 +728,46 @@ function renderDashboard(){
   }
 }
 
-/* ------------------ 카드 컴포넌트 ------------------ */
+/* ------------------ 카드 컴포넌트 (전체형: 캘린더/대시보드) ------------------ */
 function bookingCard(b){
   const card = document.createElement("div");
   card.className = "card";
   const isCancelled = b.status==="cancelled";
-  const paid = b.payment_status==="paid";
-
-  const tag = isCancelled
-    ? `<span class="tag"><span class="dot-ic" style="background:var(--cancelled)"></span>취소됨</span>`
-    : `<span class="tag"><span class="dot-ic" style="background:${paid?'var(--paid)':'var(--pending)'}"></span>${paid?'입금완료':'입금대기'}</span>`;
+  const timeLabel = b.time ? b.time.slice(0,5) : "종일";
+  const locCustomer = [b.location, b.customer_name].filter(Boolean).map(escapeHtml).join(" · ");
 
   card.innerHTML = `
-    <div class="row-top">
-      <div class="title ${isCancelled?'cancelled':''}">${escapeHtml(b.title||"(제목 없음)")}</div>
-      ${tag}
+    <div class="tag-row">
+      ${statusTag(b)}
+      <span class="tag neutral">${timeLabel}</span>
     </div>
-    ${b.location ? `<div class="loc">📍 ${escapeHtml(b.location)}</div>` : ""}
+    <div class="title ${isCancelled?'cancelled':''}">${escapeHtml(b.title||"(제목 없음)")}</div>
     <div class="row-bottom">
-      <div class="customer">${escapeHtml(b.customer_name||"-")}${b.time ? " · "+b.time.slice(0,5) : ""}</div>
+      <div class="customer">${locCustomer || "-"}</div>
       <div class="amount">${fmtMoney(b.amount)}</div>
+    </div>
+  `;
+  card.addEventListener("click", ()=> openDetail(b));
+  return card;
+}
+
+/* ------------------ 카드 컴포넌트 (요약형: 일정 요약 탭) ------------------ */
+function bookingCardCompact(b){
+  const card = document.createElement("div");
+  card.className = "card-compact";
+  const isCancelled = b.status==="cancelled";
+  const paid = b.payment_status==="paid";
+  const dotColor = isCancelled ? "var(--cancelled)" : (paid ? "var(--paid)" : "var(--pending)");
+  const timeLabel = b.time ? b.time.slice(0,5) : "종일";
+
+  card.innerHTML = `
+    <div class="left">
+      <span class="time">${timeLabel}</span>
+      <span class="title ${isCancelled?'cancelled':''}">${escapeHtml(b.title||"(제목 없음)")}</span>
+    </div>
+    <div class="right">
+      <span class="amount">${fmtMoney(b.amount)}</span>
+      <span class="dot" style="background:${dotColor}"></span>
     </div>
   `;
   card.addEventListener("click", ()=> openDetail(b));
@@ -781,14 +864,10 @@ document.getElementById("editBookingBtn").addEventListener("click", ()=>{
 function openDetail(b){
   activeDetailId = b.id;
   document.getElementById("detailTitle").textContent = b.title || "(제목 없음)";
+  document.getElementById("detailBadges").innerHTML = statusTag(b);
 
-  const badges = document.getElementById("detailBadges");
   const isCancelled = b.status==="cancelled";
   const paid = b.payment_status==="paid";
-  badges.innerHTML = isCancelled
-    ? `<span class="tag"><span class="dot-ic" style="background:var(--cancelled)"></span>취소됨</span>`
-    : `<span class="tag"><span class="dot-ic" style="background:${paid?'var(--paid)':'var(--pending)'}"></span>${paid?'입금완료':'입금대기'}</span>`;
-
   const d = parseISODate(b.date);
   document.getElementById("detailGrid").innerHTML = `
     <div class="detail-row"><div class="k">날짜</div><div class="v">${fmtDateLabel(d)}</div></div>

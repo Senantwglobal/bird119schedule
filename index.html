@@ -105,26 +105,23 @@
     padding:8px 15px;font-size:12px;font-weight:300;cursor:pointer;
   }
 
-  /* ---- Cards ---- */
+  /* ---- Cards (심플/플랫, 애플 스타일) ---- */
   .card{
-    background:var(--card);border-radius:18px;
-    padding:14px 16px;margin-bottom:10px;
-    box-shadow:0 1px 2px rgba(0,0,0,0.03), 0 6px 18px rgba(0,0,0,0.03);
-    border-left:4px solid var(--pending);
+    background:var(--card);border-radius:20px;
+    padding:16px 18px;margin-bottom:10px;
     cursor:pointer;
   }
   .card .row-top{display:flex;align-items:center;justify-content:space-between;gap:8px;}
-  .card .title{font-size:15px;font-weight:600;}
+  .card .title{font-size:15.5px;font-weight:600;}
   .card .title.cancelled{text-decoration:line-through;color:var(--muted);}
   .card .loc{font-size:12.5px;color:var(--muted);margin-top:4px;}
-  .card .row-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:11px;}
+  .card .row-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:12px;}
   .card .customer{font-size:12.5px;color:var(--muted);}
   .card .amount{font-size:14.5px;font-weight:600;}
 
   .tag{
     display:inline-flex;align-items:center;gap:6px;
-    font-size:11px;color:var(--muted);background:var(--soft);
-    padding:4px 10px 4px 8px;border-radius:999px;font-weight:300;white-space:nowrap;
+    font-size:11.5px;color:var(--muted);font-weight:300;white-space:nowrap;
   }
   .empty-state{color:var(--muted);font-size:13px;text-align:center;padding:30px 0;}
 
@@ -171,12 +168,12 @@
   .nav-item.active{color:#fff;}
   .nav-item svg{width:20px;height:20px;}
   .nav-fab{
-    width:48px;height:48px;border-radius:50%;background:#fff;color:var(--nav);
+    width:42px;height:42px;border-radius:50%;background:#fff;color:var(--nav);
     border:none;display:flex;align-items:center;justify-content:center;
-    cursor:pointer;margin-top:-22px;
-    box-shadow:0 6px 16px rgba(0,0,0,0.28);
+    cursor:pointer;
+    box-shadow:0 2px 8px rgba(0,0,0,0.18);
   }
-  .nav-fab svg{width:22px;height:22px;}
+  .nav-fab svg{width:19px;height:19px;}
 
   /* ---- Sheets / Modals ---- */
   .sheet-overlay{
@@ -210,13 +207,6 @@
   }
   .field .amount-wrap{position:relative;}
   .field .amount-wrap span{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;}
-
-  .seg{display:flex;background:var(--soft);border-radius:999px;padding:4px;gap:4px;}
-  .seg button{
-    flex:1;border:none;background:transparent;padding:10px 0;border-radius:999px;
-    font-size:13px;font-weight:300;color:var(--muted);cursor:pointer;
-  }
-  .seg button.active{background:var(--nav);color:#fff;font-weight:600;}
 
   .btn{
     width:100%;padding:14px;border-radius:999px;border:none;font-size:14.5px;font-weight:300;
@@ -378,11 +368,11 @@
     </div>
     <div class="field">
       <label>제목</label>
-      <input type="text" id="fTitle" placeholder="예: 스튜디오 대여" />
+      <input type="text" id="fTitle" placeholder="예: 오후 망설치" />
     </div>
     <div class="field">
       <label>위치</label>
-      <input type="text" id="fLocation" placeholder="예: 강남점" />
+      <input type="text" id="fLocation" placeholder="예: 서울 독상동" />
     </div>
     <div class="field">
       <label>예약자 이름</label>
@@ -393,13 +383,6 @@
       <div class="amount-wrap">
         <input type="number" id="fAmount" placeholder="0" inputmode="numeric" />
         <span>원</span>
-      </div>
-    </div>
-    <div class="field">
-      <label>작성자</label>
-      <div class="seg" id="fAuthorSeg">
-        <button type="button" data-value="사장님">사장님</button>
-        <button type="button" data-value="직원1">직원1</button>
       </div>
     </div>
   </div>
@@ -464,7 +447,6 @@ let calendarCursor = new Date();
 let dashboardCursor = new Date();
 let selectedDate = toISODate(new Date());
 let activeDetailId = null;
-let selectedAuthor = localStorage.getItem("lastAuthor") || "사장님";
 
 /* ------------------ 유틸 ------------------ */
 function pad(n){ return String(n).padStart(2,"0"); }
@@ -483,19 +465,6 @@ document.getElementById("todayLabel").textContent =
   new Date().toLocaleDateString("ko-KR", { year:"numeric", month:"long", day:"numeric", weekday:"long" });
 
 document.getElementById("fDate").value = selectedDate;
-
-function renderAuthorSeg(){
-  document.querySelectorAll("#fAuthorSeg button").forEach(btn=>{
-    btn.classList.toggle("active", btn.dataset.value===selectedAuthor);
-  });
-}
-document.querySelectorAll("#fAuthorSeg button").forEach(btn=>{
-  btn.addEventListener("click", ()=>{
-    selectedAuthor = btn.dataset.value;
-    renderAuthorSeg();
-  });
-});
-renderAuthorSeg();
 
 async function fetchBookings(){
   if (!sb) { renderAll(); return; }
@@ -689,15 +658,9 @@ function renderDashboard(){
 }
 
 /* ------------------ 카드 컴포넌트 ------------------ */
-function statusColor(b){
-  if (b.status==="cancelled") return "var(--cancelled)";
-  return b.payment_status==="paid" ? "var(--paid)" : "var(--pending)";
-}
-
 function bookingCard(b){
   const card = document.createElement("div");
   card.className = "card";
-  card.style.borderLeftColor = statusColor(b);
   const isCancelled = b.status==="cancelled";
   const paid = b.payment_status==="paid";
 
@@ -737,7 +700,6 @@ function openAddModal(){
   document.getElementById("fLocation").value = "";
   document.getElementById("fCustomer").value = "";
   document.getElementById("fAmount").value = "";
-  renderAuthorSeg();
   modalAdd.classList.add("show");
 }
 
@@ -748,13 +710,11 @@ document.getElementById("saveBooking").addEventListener("click", async ()=>{
   const location = document.getElementById("fLocation").value.trim();
   const customer_name = document.getElementById("fCustomer").value.trim();
   const amount = Number(document.getElementById("fAmount").value || 0);
-  const created_by = selectedAuthor;
 
   if (!date || !title){
     alert("날짜와 제목은 필수입니다.");
     return;
   }
-  localStorage.setItem("lastAuthor", created_by);
 
   if (!sb){
     alert("Supabase 연결이 설정되지 않아 저장할 수 없습니다.\nindex.html 상단 CONFIG를 확인해주세요.");
@@ -763,7 +723,7 @@ document.getElementById("saveBooking").addEventListener("click", async ()=>{
 
   const { error } = await sb.from("bookings").insert([{
     date, time, title, location, customer_name, amount,
-    created_by, status:"confirmed", payment_status:"pending"
+    status:"confirmed", payment_status:"pending"
   }]);
   if (error){ alert("저장 실패: " + error.message); return; }
 
@@ -797,7 +757,6 @@ function openDetail(b){
     <div class="detail-row"><div class="k">위치</div><div class="v">${escapeHtml(b.location||"-")}</div></div>
     <div class="detail-row"><div class="k">예약자</div><div class="v">${escapeHtml(b.customer_name||"-")}</div></div>
     <div class="detail-row"><div class="k">금액</div><div class="v">${fmtMoney(b.amount)}</div></div>
-    <div class="detail-row"><div class="k">작성자</div><div class="v">${escapeHtml(b.created_by||"-")}</div></div>
   `;
 
   const paymentRow = document.getElementById("paymentSwitchRow");

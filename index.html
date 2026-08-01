@@ -12,26 +12,24 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
-    --bg:#f0f0f2;
+    --bg:#f2f2f0;
     --card:#ffffff;
-    --ink:#111114;
-    --muted:#8b8b93;
-    --line:#ebebee;
-    --accent:#111114;
-    --accent-ink:#ffffff;
-    --danger:#e0503c;
-    --danger-bg:#fdeceA;
-    --success:#2f9e63;
-    --success-bg:#e8f7ee;
-    --pending:#dd8a2c;
-    --pending-bg:#fdf1de;
-    --radius:20px;
-    --radius-sm:14px;
+    --soft:#f5f5f4;
+    --ink:#17171a;
+    --muted:#9a9aa1;
+    --line:#eeeeec;
+    --nav:#18181b;
+    --paid:#2fa66a;
+    --paid-bg:#e8f7ee;
+    --pending:#e9a23c;
+    --pending-bg:#fdf2e0;
+    --cancelled:#ef5654;
+    --cancelled-bg:#fdeaea;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;height:100%;}
   body{
-    background:#dcdce0;
+    background:#dedede;
     font-family:"Pretendard",-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
     font-weight:300;
     color:var(--ink);
@@ -50,133 +48,135 @@
     overflow:hidden;
   }
   .config-banner{
-    background:#111114;color:#fff;font-size:12px;padding:10px 16px;
+    background:var(--nav);color:#fff;font-size:12px;padding:10px 16px;
     display:none; line-height:1.5;
   }
   .config-banner.show{display:block;}
   .topbar{
-    padding:18px 20px 10px;
+    padding:22px 20px 8px;
     flex:none;
   }
-  .topbar h1{margin:0;font-size:22px;font-weight:600;letter-spacing:-0.3px;}
-  .topbar p{margin:2px 0 0;color:var(--muted);font-size:13px;}
+  .topbar h1{margin:0;font-size:23px;font-weight:600;letter-spacing:-0.4px;}
+  .topbar p{margin:3px 0 0;color:var(--muted);font-size:12.5px;}
 
   main.content{
     flex:1;
     overflow-y:auto;
-    padding:4px 20px 100px;
+    padding:4px 20px 110px;
     -webkit-overflow-scrolling:touch;
   }
   .view{display:none;}
   .view.active{display:block;}
 
+  /* ---- Small colored dot used across UI ---- */
+  .dot-ic{width:6px;height:6px;border-radius:50%;flex:none;display:inline-block;}
+
   /* ---- Calendar ---- */
   .month-nav{
     display:flex;align-items:center;justify-content:space-between;
-    margin:10px 0 14px;
+    margin:12px 0 16px;
   }
   .month-nav .label{font-size:16px;font-weight:600;}
   .nav-btn{
     width:34px;height:34px;border-radius:50%;border:none;background:var(--card);
-    box-shadow:0 1px 3px rgba(0,0,0,0.08);
-    font-size:16px;color:var(--ink);display:flex;align-items:center;justify-content:center;
+    box-shadow:0 1px 3px rgba(0,0,0,0.06);
+    font-size:15px;color:var(--ink);display:flex;align-items:center;justify-content:center;
     cursor:pointer;
   }
-  .dow-row{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;color:var(--muted);font-size:12px;margin-bottom:6px;}
-  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);row-gap:6px;}
-  .cal-cell{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;height:44px;cursor:pointer;}
+  .dow-row{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;color:var(--muted);font-size:11.5px;margin-bottom:8px;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);row-gap:8px;}
+  .cal-cell{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;height:44px;cursor:pointer;gap:3px;}
   .cal-cell .num{
     width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-    font-size:14px;font-weight:300;
+    font-size:13.5px;font-weight:300;
   }
   .cal-cell.today .num{border:1.5px solid var(--ink);}
-  .cal-cell.selected .num{background:var(--ink);color:var(--accent-ink);}
-  .cal-cell .dot{width:5px;height:5px;border-radius:50%;background:var(--ink);margin-top:2px;}
-  .cal-cell .dot.faint{background:#c7c7cc;}
+  .cal-cell.selected .num{background:var(--ink);color:#fff;}
+  .cal-cell .dot{width:5px;height:5px;border-radius:50%;background:var(--pending);}
   .cal-cell.empty{visibility:hidden;}
 
   .section-head{
     display:flex;align-items:center;justify-content:space-between;
-    margin:22px 0 10px;
+    margin:24px 0 12px;
   }
   .section-head h2{font-size:15px;font-weight:600;margin:0;}
   .mini-btn{
-    background:var(--ink);color:#fff;border:none;border-radius:999px;
-    padding:7px 14px;font-size:12px;font-weight:300;cursor:pointer;
+    background:var(--nav);color:#fff;border:none;border-radius:999px;
+    padding:8px 15px;font-size:12px;font-weight:300;cursor:pointer;
   }
 
   /* ---- Cards ---- */
   .card{
-    background:var(--card);border-radius:var(--radius-sm);
+    background:var(--card);border-radius:18px;
     padding:14px 16px;margin-bottom:10px;
-    box-shadow:0 1px 4px rgba(0,0,0,0.05);
+    box-shadow:0 1px 2px rgba(0,0,0,0.03), 0 6px 18px rgba(0,0,0,0.03);
+    border-left:4px solid var(--pending);
     cursor:pointer;
   }
   .card .row-top{display:flex;align-items:center;justify-content:space-between;gap:8px;}
   .card .title{font-size:15px;font-weight:600;}
   .card .title.cancelled{text-decoration:line-through;color:var(--muted);}
-  .card .loc{font-size:12.5px;color:var(--muted);margin-top:3px;}
-  .card .row-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:10px;}
+  .card .loc{font-size:12.5px;color:var(--muted);margin-top:4px;}
+  .card .row-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:11px;}
   .card .customer{font-size:12.5px;color:var(--muted);}
-  .card .amount{font-size:14.5px;font-weight:300;}
-  .badge{
-    font-size:11px;font-weight:300;padding:3px 9px;border-radius:999px;white-space:nowrap;
+  .card .amount{font-size:14.5px;font-weight:600;}
+
+  .tag{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:11px;color:var(--muted);background:var(--soft);
+    padding:4px 10px 4px 8px;border-radius:999px;font-weight:300;white-space:nowrap;
   }
-  .badge.pending{background:var(--pending-bg);color:var(--pending);}
-  .badge.paid{background:var(--success-bg);color:var(--success);}
-  .badge.cancelled{background:var(--danger-bg);color:var(--danger);}
-  .empty-state{color:var(--muted);font-size:13px;text-align:center;padding:26px 0;}
+  .empty-state{color:var(--muted);font-size:13px;text-align:center;padding:30px 0;}
 
   /* ---- Week view ---- */
-  .day-group{margin-bottom:18px;}
+  .day-group{margin-bottom:20px;}
   .day-group .day-header{
-    display:flex;align-items:baseline;gap:8px;margin-bottom:8px;
+    display:flex;align-items:baseline;gap:8px;margin-bottom:9px;padding-left:2px;
   }
   .day-group .day-header .dname{font-size:14px;font-weight:600;}
   .day-group .day-header .ddate{font-size:12.5px;color:var(--muted);}
   .day-group.today .day-header .dname{color:var(--ink);}
   .day-group.today .day-header .dname::after{content:" · 오늘";color:var(--pending);font-weight:300;font-size:11px;}
-  .day-empty{color:var(--muted);font-size:12.5px;padding:2px 0 4px;}
+  .day-empty{color:var(--muted);font-size:12.5px;padding:2px 0 6px 2px;}
 
   /* ---- Dashboard ---- */
   .stat-card{
-    background:var(--ink);color:#fff;border-radius:var(--radius);
-    padding:20px;margin-bottom:12px;
+    background:var(--nav);color:#fff;border-radius:24px;
+    padding:22px;margin-bottom:12px;
   }
-  .stat-card .label{font-size:13px;opacity:0.7;margin-bottom:6px;}
-  .stat-card .value{font-size:28px;font-weight:300;letter-spacing:-0.5px;}
-  .stat-card .sub{font-size:12px;opacity:0.6;margin-top:6px;}
-  .stat-card.light{background:var(--card);color:var(--ink);border:1px solid var(--line);}
+  .stat-card .label{font-size:12.5px;opacity:0.65;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+  .stat-card .value{font-size:29px;font-weight:600;letter-spacing:-0.6px;}
+  .stat-card .sub{font-size:12px;opacity:0.55;margin-top:6px;}
+  .stat-card.light{background:var(--card);color:var(--ink);}
   .stat-card.light .label{opacity:1;color:var(--muted);}
   .stat-card.light .sub{opacity:1;color:var(--muted);}
   .stat-row{display:flex;gap:10px;}
-  .stat-row .stat-card{flex:1;padding:16px;}
-  .stat-row .value{font-size:20px;}
-
-  /* ---- FAB ---- */
-  .fab{
-    position:absolute;right:20px;bottom:96px;
-    width:52px;height:52px;border-radius:50%;
-    background:var(--ink);color:#fff;border:none;
-    font-size:26px;line-height:1;font-weight:300;
-    box-shadow:0 6px 16px rgba(0,0,0,0.25);
-    display:flex;align-items:center;justify-content:center;
-    cursor:pointer;z-index:20;
-  }
+  .stat-row .stat-card{flex:1;padding:16px;border-radius:20px;}
+  .stat-row .value{font-size:19px;}
 
   /* ---- Bottom nav ---- */
+  .bottomnav-wrap{
+    flex:none;padding:0 16px calc(14px + env(safe-area-inset-bottom));
+  }
   .bottomnav{
-    flex:none;display:flex;justify-content:space-around;align-items:center;
-    background:var(--card);border-top:1px solid var(--line);
-    padding:10px 10px calc(10px + env(safe-area-inset-bottom));
+    display:flex;align-items:center;justify-content:space-around;
+    background:var(--nav);border-radius:999px;padding:8px 8px;
+    box-shadow:0 10px 26px rgba(0,0,0,0.2);
   }
   .nav-item{
     display:flex;flex-direction:column;align-items:center;gap:3px;
-    background:none;border:none;color:var(--muted);font-size:11px;font-weight:300;
-    cursor:pointer;padding:4px 14px;border-radius:12px;
+    background:none;border:none;color:#8f8f97;font-size:10.5px;font-weight:300;
+    cursor:pointer;padding:7px 13px;border-radius:14px;
   }
-  .nav-item.active{color:var(--ink);}
-  .nav-item svg{width:22px;height:22px;}
+  .nav-item.active{color:#fff;}
+  .nav-item svg{width:20px;height:20px;}
+  .nav-fab{
+    width:48px;height:48px;border-radius:50%;background:#fff;color:var(--nav);
+    border:none;display:flex;align-items:center;justify-content:center;
+    cursor:pointer;margin-top:-22px;
+    box-shadow:0 6px 16px rgba(0,0,0,0.28);
+  }
+  .nav-fab svg{width:22px;height:22px;}
 
   /* ---- Sheets / Modals ---- */
   .sheet-overlay{
@@ -186,40 +186,72 @@
   .sheet-overlay.show{display:flex;}
   .sheet{
     width:100%;max-width:480px;background:var(--bg);
-    border-radius:24px 24px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom));
+    border-radius:26px 26px 0 0;padding:14px 20px calc(20px + env(safe-area-inset-bottom));
     max-height:88vh;overflow-y:auto;
   }
-  .sheet-handle{width:36px;height:4px;background:#d8d8dc;border-radius:99px;margin:0 auto 14px;}
-  .sheet h3{margin:0 0 16px;font-size:17px;font-weight:600;}
+  .sheet-handle{width:36px;height:4px;background:#d8d8d6;border-radius:99px;margin:0 auto 16px;}
+  .sheet-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .sheet-topbar h3{margin:0;font-size:16px;font-weight:600;}
+  .icon-btn{
+    width:36px;height:36px;border-radius:50%;border:none;background:var(--card);
+    box-shadow:0 1px 3px rgba(0,0,0,0.07);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);
+  }
+  .icon-btn.dark{background:var(--nav);color:#fff;}
+  .icon-btn svg{width:16px;height:16px;}
+
   .field{margin-bottom:12px;}
-  .field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:5px;font-weight:300;}
-  .field input, .field select{
-    width:100%;padding:12px 13px;border-radius:12px;border:1px solid var(--line);
-    background:#fff;font-size:14.5px;color:var(--ink);font-family:inherit;
+  .field-row{display:flex;gap:10px;}
+  .field-row .field{flex:1;}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:300;}
+  .field input{
+    width:100%;padding:13px 14px;border-radius:14px;border:none;
+    background:var(--soft);font-size:14.5px;color:var(--ink);font-family:inherit;font-weight:300;
   }
   .field .amount-wrap{position:relative;}
   .field .amount-wrap span{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;}
-  .btn{
-    width:100%;padding:14px;border-radius:14px;border:none;font-size:15px;font-weight:300;
-    cursor:pointer;margin-top:6px;
+
+  .seg{display:flex;background:var(--soft);border-radius:999px;padding:4px;gap:4px;}
+  .seg button{
+    flex:1;border:none;background:transparent;padding:10px 0;border-radius:999px;
+    font-size:13px;font-weight:300;color:var(--muted);cursor:pointer;
   }
-  .btn-primary{background:var(--ink);color:#fff;}
-  .btn-secondary{background:#fff;color:var(--ink);border:1px solid var(--line);}
-  .btn-danger{background:var(--danger-bg);color:var(--danger);}
-  .btn-success{background:var(--success-bg);color:var(--success);}
+  .seg button.active{background:var(--nav);color:#fff;font-weight:600;}
+
+  .btn{
+    width:100%;padding:14px;border-radius:999px;border:none;font-size:14.5px;font-weight:300;
+    cursor:pointer;margin-top:8px;
+  }
+  .btn-primary{background:var(--nav);color:#fff;}
+  .btn-secondary{background:var(--card);color:var(--ink);}
+  .btn-danger{background:var(--cancelled-bg);color:var(--cancelled);}
   .btn-ghost{background:none;color:var(--muted);}
 
-  .detail-grid{margin-bottom:14px;}
-  .detail-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px;}
+  .detail-grid{margin:4px 0 14px;background:var(--card);border-radius:18px;padding:4px 16px;}
+  .detail-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
   .detail-row:last-child{border-bottom:none;}
   .detail-row .k{color:var(--muted);}
-  .detail-row .v{font-weight:300;text-align:right;}
-  .badge-row{display:flex;gap:6px;margin-bottom:14px;}
+  .detail-row .v{font-weight:600;text-align:right;}
+  .badge-row{margin-bottom:14px;}
+
+  .switch-row{
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--card);border-radius:18px;padding:14px 16px;margin-bottom:10px;cursor:pointer;
+  }
+  .switch-row .switch-label{font-size:14px;font-weight:600;}
+  .switch-row .switch-sub{font-size:12px;color:var(--muted);margin-top:2px;font-weight:300;}
+  .switch{width:46px;height:27px;border-radius:999px;background:#e5e5e3;position:relative;transition:background .18s;flex:none;}
+  .switch.on{background:var(--paid);}
+  .switch .knob{
+    position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;background:#fff;
+    box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:left .18s;
+  }
+  .switch.on .knob{left:22px;}
 
   .confirm-box{
-    background:var(--danger-bg);border-radius:14px;padding:14px;margin-top:10px;
+    background:var(--cancelled-bg);border-radius:16px;padding:14px;margin-top:10px;
   }
-  .confirm-box p{margin:0 0 10px;font-size:13.5px;color:var(--danger);font-weight:300;}
+  .confirm-box p{margin:0 0 10px;font-size:13.5px;color:var(--cancelled);font-weight:300;}
   .confirm-actions{display:flex;gap:8px;}
   .confirm-actions button{flex:1;margin-top:0;}
 </style>
@@ -280,12 +312,12 @@
 
       <div class="stat-row">
         <div class="stat-card light">
-          <div class="label">입금 대기</div>
+          <div class="label"><span class="dot-ic" style="background:var(--pending)"></span>입금 대기</div>
           <div class="value" id="dashPendingAmount">₩0</div>
           <div class="sub" id="dashPendingCount">0건</div>
         </div>
         <div class="stat-card light">
-          <div class="label">취소된 일정</div>
+          <div class="label"><span class="dot-ic" style="background:var(--cancelled)"></span>취소된 일정</div>
           <div class="value" id="dashCancelledCount">0건</div>
           <div class="sub" id="dashCancelledAmount">₩0</div>
         </div>
@@ -299,36 +331,50 @@
 
   </main>
 
-  <button class="fab" id="fabAdd">+</button>
-
-  <nav class="bottomnav">
-    <button class="nav-item active" data-tab="calendar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      캘린더
-    </button>
-    <button class="nav-item" data-tab="week">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-      이번주
-    </button>
-    <button class="nav-item" data-tab="dashboard">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
-      대시보드
-    </button>
-  </nav>
+  <div class="bottomnav-wrap">
+    <nav class="bottomnav">
+      <button class="nav-item active" data-tab="calendar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        캘린더
+      </button>
+      <button class="nav-item" data-tab="week">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        이번주
+      </button>
+      <button class="nav-fab" id="fabAdd">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+      <button class="nav-item" data-tab="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+        대시보드
+      </button>
+    </nav>
+  </div>
 </div>
 
 <!-- ===== 일정 추가 모달 ===== -->
 <div class="sheet-overlay" id="modalAdd">
   <div class="sheet">
     <div class="sheet-handle"></div>
-    <h3>새 일정 추가</h3>
-    <div class="field">
-      <label>날짜</label>
-      <input type="date" id="fDate" />
+    <div class="sheet-topbar">
+      <button class="icon-btn" id="cancelAdd">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <h3>새 일정 추가</h3>
+      <button class="icon-btn dark" id="saveBooking">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
     </div>
-    <div class="field">
-      <label>시간 (선택)</label>
-      <input type="time" id="fTime" />
+
+    <div class="field-row">
+      <div class="field">
+        <label>날짜</label>
+        <input type="date" id="fDate" />
+      </div>
+      <div class="field">
+        <label>시간 (선택)</label>
+        <input type="time" id="fTime" />
+      </div>
     </div>
     <div class="field">
       <label>제목</label>
@@ -351,13 +397,11 @@
     </div>
     <div class="field">
       <label>작성자</label>
-      <select id="fAuthor">
-        <option value="사장님">사장님</option>
-        <option value="직원1">직원1</option>
-      </select>
+      <div class="seg" id="fAuthorSeg">
+        <button type="button" data-value="사장님">사장님</button>
+        <button type="button" data-value="직원1">직원1</button>
+      </div>
     </div>
-    <button class="btn btn-primary" id="saveBooking">저장</button>
-    <button class="btn btn-ghost" id="cancelAdd">취소</button>
   </div>
 </div>
 
@@ -365,11 +409,25 @@
 <div class="sheet-overlay" id="modalDetail">
   <div class="sheet">
     <div class="sheet-handle"></div>
-    <h3 id="detailTitle">-</h3>
+    <div class="sheet-topbar">
+      <button class="icon-btn" id="closeDetail">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <h3 id="detailTitle">-</h3>
+      <div style="width:36px;"></div>
+    </div>
+
     <div class="badge-row" id="detailBadges"></div>
     <div class="detail-grid" id="detailGrid"></div>
 
-    <button class="btn btn-success" id="togglePaymentBtn">입금 완료로 표시</button>
+    <div class="switch-row" id="paymentSwitchRow">
+      <div>
+        <div class="switch-label" id="paymentLabel">입금 완료</div>
+        <div class="switch-sub" id="paymentSub">입금 대기 중입니다</div>
+      </div>
+      <div class="switch" id="paymentSwitch"><div class="knob"></div></div>
+    </div>
+
     <button class="btn btn-danger" id="cancelBookingBtn">일정 취소</button>
     <button class="btn btn-secondary" id="restoreBookingBtn" style="display:none;">일정 취소 복구</button>
 
@@ -380,8 +438,6 @@
         <button class="btn btn-danger" id="confirmCancelYes">취소 확정</button>
       </div>
     </div>
-
-    <button class="btn btn-ghost" id="closeDetail">닫기</button>
   </div>
 </div>
 
@@ -408,6 +464,7 @@ let calendarCursor = new Date();
 let dashboardCursor = new Date();
 let selectedDate = toISODate(new Date());
 let activeDetailId = null;
+let selectedAuthor = localStorage.getItem("lastAuthor") || "사장님";
 
 /* ------------------ 유틸 ------------------ */
 function pad(n){ return String(n).padStart(2,"0"); }
@@ -426,8 +483,19 @@ document.getElementById("todayLabel").textContent =
   new Date().toLocaleDateString("ko-KR", { year:"numeric", month:"long", day:"numeric", weekday:"long" });
 
 document.getElementById("fDate").value = selectedDate;
-const lastAuthor = localStorage.getItem("lastAuthor");
-if (lastAuthor) document.getElementById("fAuthor").value = lastAuthor;
+
+function renderAuthorSeg(){
+  document.querySelectorAll("#fAuthorSeg button").forEach(btn=>{
+    btn.classList.toggle("active", btn.dataset.value===selectedAuthor);
+  });
+}
+document.querySelectorAll("#fAuthorSeg button").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    selectedAuthor = btn.dataset.value;
+    renderAuthorSeg();
+  });
+});
+renderAuthorSeg();
 
 async function fetchBookings(){
   if (!sb) { renderAll(); return; }
@@ -500,11 +568,16 @@ function renderCalendar(){
     if (iso === selectedDate) cell.classList.add("selected");
 
     const dayBookings = bookingsForDate(iso);
-    const hasConfirmed = dayBookings.some(b=>b.status==="confirmed");
-    const hasOnlyCancelled = dayBookings.length>0 && !hasConfirmed;
+    const confirmedList = dayBookings.filter(b=>b.status==="confirmed");
+    let dotHtml = "";
+    if (confirmedList.length){
+      const hasPending = confirmedList.some(b=>b.payment_status==="pending");
+      dotHtml = `<div class="dot" style="background:${hasPending ? 'var(--pending)' : 'var(--paid)'}"></div>`;
+    } else if (dayBookings.length){
+      dotHtml = `<div class="dot" style="background:#d4d4d3"></div>`;
+    }
 
-    cell.innerHTML = `<div class="num">${day}</div>` +
-      (hasConfirmed ? `<div class="dot"></div>` : (hasOnlyCancelled ? `<div class="dot faint"></div>` : ""));
+    cell.innerHTML = `<div class="num">${day}</div>${dotHtml}`;
 
     cell.addEventListener("click", ()=>{
       selectedDate = iso;
@@ -616,20 +689,26 @@ function renderDashboard(){
 }
 
 /* ------------------ 카드 컴포넌트 ------------------ */
+function statusColor(b){
+  if (b.status==="cancelled") return "var(--cancelled)";
+  return b.payment_status==="paid" ? "var(--paid)" : "var(--pending)";
+}
+
 function bookingCard(b){
   const card = document.createElement("div");
   card.className = "card";
+  card.style.borderLeftColor = statusColor(b);
   const isCancelled = b.status==="cancelled";
-  const payBadge = isCancelled ? "" :
-    (b.payment_status==="paid"
-      ? `<span class="badge paid">입금완료</span>`
-      : `<span class="badge pending">입금대기</span>`);
-  const cancelBadge = isCancelled ? `<span class="badge cancelled">취소됨</span>` : "";
+  const paid = b.payment_status==="paid";
+
+  const tag = isCancelled
+    ? `<span class="tag"><span class="dot-ic" style="background:var(--cancelled)"></span>취소됨</span>`
+    : `<span class="tag"><span class="dot-ic" style="background:${paid?'var(--paid)':'var(--pending)'}"></span>${paid?'입금완료':'입금대기'}</span>`;
 
   card.innerHTML = `
     <div class="row-top">
       <div class="title ${isCancelled?'cancelled':''}">${escapeHtml(b.title||"(제목 없음)")}</div>
-      ${cancelBadge || payBadge}
+      ${tag}
     </div>
     ${b.location ? `<div class="loc">📍 ${escapeHtml(b.location)}</div>` : ""}
     <div class="row-bottom">
@@ -658,6 +737,7 @@ function openAddModal(){
   document.getElementById("fLocation").value = "";
   document.getElementById("fCustomer").value = "";
   document.getElementById("fAmount").value = "";
+  renderAuthorSeg();
   modalAdd.classList.add("show");
 }
 
@@ -668,7 +748,7 @@ document.getElementById("saveBooking").addEventListener("click", async ()=>{
   const location = document.getElementById("fLocation").value.trim();
   const customer_name = document.getElementById("fCustomer").value.trim();
   const amount = Number(document.getElementById("fAmount").value || 0);
-  const created_by = document.getElementById("fAuthor").value;
+  const created_by = selectedAuthor;
 
   if (!date || !title){
     alert("날짜와 제목은 필수입니다.");
@@ -704,14 +784,11 @@ function openDetail(b){
   document.getElementById("detailTitle").textContent = b.title || "(제목 없음)";
 
   const badges = document.getElementById("detailBadges");
-  badges.innerHTML = "";
-  if (b.status==="cancelled"){
-    badges.innerHTML = `<span class="badge cancelled">취소됨</span>`;
-  } else {
-    badges.innerHTML = b.payment_status==="paid"
-      ? `<span class="badge paid">입금완료</span>`
-      : `<span class="badge pending">입금대기</span>`;
-  }
+  const isCancelled = b.status==="cancelled";
+  const paid = b.payment_status==="paid";
+  badges.innerHTML = isCancelled
+    ? `<span class="tag"><span class="dot-ic" style="background:var(--cancelled)"></span>취소됨</span>`
+    : `<span class="tag"><span class="dot-ic" style="background:${paid?'var(--paid)':'var(--pending)'}"></span>${paid?'입금완료':'입금대기'}</span>`;
 
   const d = parseISODate(b.date);
   document.getElementById("detailGrid").innerHTML = `
@@ -723,10 +800,15 @@ function openDetail(b){
     <div class="detail-row"><div class="k">작성자</div><div class="v">${escapeHtml(b.created_by||"-")}</div></div>
   `;
 
-  const isCancelled = b.status==="cancelled";
-  document.getElementById("togglePaymentBtn").style.display = isCancelled ? "none" : "block";
-  document.getElementById("togglePaymentBtn").textContent =
-    b.payment_status==="paid" ? "입금 대기로 되돌리기" : "입금 완료로 표시";
+  const paymentRow = document.getElementById("paymentSwitchRow");
+  if (isCancelled){
+    paymentRow.style.display = "none";
+  } else {
+    paymentRow.style.display = "flex";
+    document.getElementById("paymentSwitch").classList.toggle("on", paid);
+    document.getElementById("paymentSub").textContent = paid ? "입금이 완료되었습니다" : "입금 대기 중입니다";
+  }
+
   document.getElementById("cancelBookingBtn").style.display = isCancelled ? "none" : "block";
   document.getElementById("restoreBookingBtn").style.display = isCancelled ? "block" : "none";
   document.getElementById("confirmBox").style.display = "none";
@@ -734,14 +816,15 @@ function openDetail(b){
   modalDetail.classList.add("show");
 }
 
-document.getElementById("togglePaymentBtn").addEventListener("click", async ()=>{
+document.getElementById("paymentSwitchRow").addEventListener("click", async ()=>{
   const b = bookings.find(x=>x.id===activeDetailId);
   if (!b || !sb) return;
   const newStatus = b.payment_status==="paid" ? "pending" : "paid";
   const { error } = await sb.from("bookings").update({ payment_status:newStatus }).eq("id", b.id);
   if (error){ alert("업데이트 실패: " + error.message); return; }
-  modalDetail.classList.remove("show");
   await fetchBookings();
+  const updated = bookings.find(x=>x.id===activeDetailId);
+  if (updated) openDetail(updated);
 });
 
 document.getElementById("cancelBookingBtn").addEventListener("click", ()=>{

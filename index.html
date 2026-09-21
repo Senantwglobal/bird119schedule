@@ -15,13 +15,15 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
-    --bg:#f2f2f0;
+    --bg:#f5f5f7;
     --card:#ffffff;
-    --soft:#f5f5f4;
-    --ink:#17171a;
-    --muted:#9a9aa1;
-    --line:#e9e9e6;
-    --nav:#18181b;
+    --soft:#fafafc;
+    --ink:#1d1d1f;
+    --muted:#7a7a7a;
+    --line:#d2d2d7;
+    --nav:#1d1d1f;
+    --accent:#0066cc;
+    --accent-light:#0071e3;
     --paid:#1f9254;
     --paid-bg:#e6f6ec;
     --pending:#b45f09;
@@ -29,6 +31,10 @@
     --cancelled:#e5484d;
     --cancelled-bg:#fdecec;
     --profit:#0f766e;
+    --quote:#6d28d9;
+    --quote-bg:#f2ecfd;
+    --shadow-sm:0 1px 2px rgba(0,0,0,0.05), 0 1px 1px rgba(0,0,0,0.03);
+    --shadow-md:0 2px 8px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.05);
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;height:100%;}
@@ -81,7 +87,7 @@
   .nav-btn{
     width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--card);
     font-size:15px;color:var(--ink);display:flex;align-items:center;justify-content:center;
-    cursor:pointer;
+    cursor:pointer;box-shadow:var(--shadow-sm);
   }
   .dow-row{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;color:var(--muted);font-size:11.5px;margin-bottom:8px;}
   .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);row-gap:8px;}
@@ -90,8 +96,9 @@
     width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
     font-size:13.5px;font-weight:300;
   }
-  .cal-cell.today .num{border:1.5px solid var(--ink);}
-  .cal-cell.selected .num{background:var(--ink);color:#fff;}
+  .cal-cell.today .num{border:1.5px solid var(--cancelled);color:var(--cancelled);}
+  .cal-cell.selected .num{background:var(--accent);color:#fff;}
+  .cal-cell.selected.today .num{background:var(--cancelled);color:#fff;border-color:var(--cancelled);}
   .cal-cell .dot{width:5px;height:5px;border-radius:50%;background:var(--pending);}
   .cal-cell.empty{visibility:hidden;}
 
@@ -101,7 +108,7 @@
   }
   .section-head h2{font-size:15px;font-weight:600;margin:0;}
   .mini-btn{
-    background:var(--nav);color:#fff;border:none;border-radius:999px;
+    background:var(--accent);color:#fff;border:none;border-radius:999px;
     padding:8px 15px;font-size:12px;font-weight:300;cursor:pointer;
   }
 
@@ -116,13 +123,14 @@
   .tag.paid{background:var(--paid-bg);color:var(--paid);}
   .tag.pending{background:var(--pending-bg);color:var(--pending);}
   .tag.cancelled{background:var(--cancelled-bg);color:var(--cancelled);}
+  .tag.quote{background:var(--quote-bg);color:var(--quote);}
   .tag.neutral{background:var(--soft);color:var(--muted);font-weight:300;padding:5px 10px;}
 
   /* ---- Cards (심플/플랫, 애플 스타일) ---- */
   .card{
     background:var(--card);border:1px solid var(--line);border-radius:20px;
     padding:16px 18px;margin-bottom:10px;
-    cursor:pointer;
+    cursor:pointer;box-shadow:var(--shadow-sm);
   }
   .card .title{font-size:15px;font-weight:600;margin-top:10px;}
   .card .title.cancelled{text-decoration:line-through;color:var(--muted);}
@@ -134,7 +142,7 @@
   .card-compact{
     display:flex;align-items:center;justify-content:space-between;gap:10px;
     background:var(--card);border:1px solid var(--line);border-radius:14px;
-    padding:11px 14px;margin-bottom:8px;cursor:pointer;
+    padding:11px 14px;margin-bottom:8px;cursor:pointer;box-shadow:var(--shadow-sm);
   }
   .card-compact .left{display:flex;align-items:center;gap:10px;min-width:0;}
   .card-compact .time{font-size:11.5px;color:var(--muted);font-weight:300;flex:none;width:36px;}
@@ -155,7 +163,8 @@
     flex:1;padding:9px 0;border-radius:11px;font-size:13.5px;font-weight:300;color:var(--muted);
     background:none;border:none;cursor:pointer;
   }
-  .seg2 button.active{background:var(--nav);color:#fff;font-weight:600;}
+  .seg2 button.active{background:var(--accent);color:#fff;font-weight:600;}
+  .seg2 button.active.quote-active{background:var(--quote);}
 
   /* ---- Week view ---- */
   .day-group{margin-bottom:18px;}
@@ -176,7 +185,7 @@
   .stat-card .label{font-size:12.5px;opacity:0.65;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
   .stat-card .value{font-size:29px;font-weight:600;letter-spacing:-0.6px;}
   .stat-card .sub{font-size:12px;opacity:0.55;margin-top:6px;}
-  .stat-card.light{background:var(--card);color:var(--ink);border:1px solid var(--line);}
+  .stat-card.light{background:var(--card);color:var(--ink);border:1px solid var(--line);box-shadow:var(--shadow-sm);}
   .stat-card.light .label{opacity:1;color:var(--muted);}
   .stat-card.light .sub{opacity:1;color:var(--muted);}
   .stat-card.profit{background:var(--profit);}
@@ -188,7 +197,7 @@
   .list-row{
     display:flex;align-items:center;justify-content:space-between;gap:10px;
     background:var(--card);border:1px solid var(--line);border-radius:14px;
-    padding:12px 14px;margin-bottom:8px;
+    padding:12px 14px;margin-bottom:8px;box-shadow:var(--shadow-sm);
   }
   .list-row .info{display:flex;flex-direction:column;gap:2px;min-width:0;cursor:pointer;}
   .list-row .info .primary{font-size:13.5px;font-weight:600;}
@@ -243,8 +252,9 @@
   .icon-btn{
     width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--card);
     display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);
+    box-shadow:var(--shadow-sm);
   }
-  .icon-btn.dark{background:var(--nav);color:#fff;border-color:var(--nav);}
+  .icon-btn.dark{background:var(--accent);color:#fff;border-color:var(--accent);}
   .icon-btn svg{width:16px;height:16px;}
 
   .field{margin-bottom:12px;}
@@ -269,13 +279,13 @@
     background:var(--card);font-size:13.5px;font-weight:300;color:var(--ink);
     cursor:pointer;white-space:nowrap;
   }
-  .time-chip.active{background:var(--nav);color:#fff;border-color:var(--nav);font-weight:600;}
+  .time-chip.active{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600;}
 
   .btn{
     width:100%;padding:14px;border-radius:999px;border:none;font-size:14.5px;font-weight:300;
     cursor:pointer;margin-top:8px;
   }
-  .btn-primary{background:var(--nav);color:#fff;}
+  .btn-primary{background:var(--accent);color:#fff;}
   .btn-secondary{background:var(--card);color:var(--ink);border:1px solid var(--line);}
   .btn-danger{background:var(--cancelled-bg);color:var(--cancelled);}
   .btn-ghost{background:none;color:var(--muted);}
@@ -352,7 +362,16 @@
 
     <!-- ===== 자재/주유 탭 ===== -->
     <section id="view-materials" class="view">
-      <div class="section-head" style="margin-top:14px;">
+      <div class="month-nav">
+        <button class="nav-btn" id="matPrev">‹</button>
+        <div class="label" id="matMonthLabel">-</div>
+        <button class="nav-btn" id="matNext">›</button>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin:-6px 0 4px;">
+        <button class="mini-btn" id="matThisMonthBtn" style="background:var(--card);color:var(--ink);border:1px solid var(--line);">이번달</button>
+      </div>
+
+      <div class="section-head" style="margin-top:18px;">
         <h2>자재 구입 이력</h2>
         <button class="mini-btn" id="addMaterialBtn">+ 구입 추가</button>
       </div>
@@ -369,6 +388,12 @@
         <button class="mini-btn" id="addAdBtn">+ 광고비 입력</button>
       </div>
       <div id="adList"></div>
+
+      <div class="section-head" style="margin-top:32px;">
+        <h2>기타비 (월별)</h2>
+        <button class="mini-btn" id="addMiscBtn">+ 기타비 입력</button>
+      </div>
+      <div id="miscList"></div>
     </section>
 
     <!-- ===== 대시보드 탭 ===== -->
@@ -451,6 +476,11 @@
       </button>
     </div>
 
+    <div class="seg2" id="bookingTypeSeg">
+      <button type="button" data-type="job">일정</button>
+      <button type="button" data-type="quote">견적</button>
+    </div>
+
     <div class="field">
       <label>날짜</label>
       <input type="date" id="fDate" />
@@ -467,22 +497,24 @@
       <label>위치</label>
       <input type="text" id="fLocation" placeholder="예: 서울 독상동" />
     </div>
-    <div class="field">
-      <label>예약자 이름</label>
-      <input type="text" id="fCustomer" placeholder="예: 홍길동" />
-    </div>
-    <div class="field">
-      <label>스카이차비</label>
-      <div class="amount-wrap">
-        <input type="number" id="fSkyLift" placeholder="0" inputmode="numeric" />
-        <span>원</span>
+    <div id="jobOnlyFields">
+      <div class="field">
+        <label>예약자 이름</label>
+        <input type="text" id="fCustomer" placeholder="예: 홍길동" />
       </div>
-    </div>
-    <div class="field">
-      <label>금액</label>
-      <div class="amount-wrap">
-        <input type="number" id="fAmount" placeholder="0" inputmode="numeric" />
-        <span>원</span>
+      <div class="field">
+        <label>스카이차비</label>
+        <div class="amount-wrap">
+          <input type="number" id="fSkyLift" placeholder="0" inputmode="numeric" />
+          <span>원</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>금액</label>
+        <div class="amount-wrap">
+          <input type="number" id="fAmount" placeholder="0" inputmode="numeric" />
+          <span>원</span>
+        </div>
       </div>
     </div>
   </div>
@@ -550,7 +582,6 @@
       <div class="seg2" id="materialTypeSeg">
         <button type="button" data-type="망">망</button>
         <button type="button" data-type="스파이크">스파이크</button>
-        <button type="button" data-type="기타비">기타비</button>
       </div>
     </div>
     <div class="field">
@@ -559,6 +590,10 @@
         <input type="number" id="mAmount" placeholder="0" inputmode="numeric" />
         <span>원</span>
       </div>
+    </div>
+    <div class="field">
+      <label>메모 (선택)</label>
+      <input type="text" id="mNote" placeholder="예: 10m 그물 2개" />
     </div>
     <button class="btn btn-ghost" id="deleteMaterialBtn" style="display:none;color:var(--cancelled);">삭제</button>
   </div>
@@ -589,6 +624,10 @@
         <span>원</span>
       </div>
     </div>
+    <div class="field">
+      <label>메모 (선택)</label>
+      <input type="text" id="fuelNote" placeholder="예: 주유소 영수증 참고" />
+    </div>
     <button class="btn btn-ghost" id="deleteFuelBtn" style="display:none;color:var(--cancelled);">삭제</button>
   </div>
 </div>
@@ -618,7 +657,44 @@
         <span>원</span>
       </div>
     </div>
+    <div class="field">
+      <label>메모 (선택)</label>
+      <input type="text" id="adNote" placeholder="예: 네이버 광고" />
+    </div>
     <button class="btn btn-ghost" id="deleteAdBtn" style="display:none;color:var(--cancelled);">삭제</button>
+  </div>
+</div>
+
+<!-- ===== 기타비 추가/수정 모달 ===== -->
+<div class="sheet-overlay" id="modalMisc">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-topbar">
+      <button class="icon-btn" id="cancelMisc">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <h3 id="miscModalTitle">기타비 입력</h3>
+      <button class="icon-btn dark" id="saveMisc">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
+    </div>
+
+    <div class="field">
+      <label>월</label>
+      <input type="month" id="miscMonth" />
+    </div>
+    <div class="field">
+      <label>이번달 총 기타비</label>
+      <div class="amount-wrap">
+        <input type="number" id="miscAmount" placeholder="0" inputmode="numeric" />
+        <span>원</span>
+      </div>
+    </div>
+    <div class="field">
+      <label>메모 (선택)</label>
+      <input type="text" id="miscNote" placeholder="예: 사다리차 렌탈" />
+    </div>
+    <button class="btn btn-ghost" id="deleteMiscBtn" style="display:none;color:var(--cancelled);">삭제</button>
   </div>
 </div>
 
@@ -642,12 +718,15 @@ if (configured) {
 const ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
 const ICON_CLOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>';
 const ICON_X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+const ICON_QUOTE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/></svg>';
 
 /* ------------------ 상태 ------------------ */
 let bookings = [];
 let materials = [];
 let fuelCosts = [];
 let adCosts = [];
+let miscCosts = [];
+let materialsCursor = new Date();
 let currentTab = "calendar";
 let calendarCursor = new Date();
 let dashboardCursor = new Date();
@@ -657,10 +736,12 @@ let editingId = null;
 let confirmMode = "cancel"; // "cancel" | "delete"
 let summaryMode = "week"; // "today" | "week"
 let selectedTime = ""; // "" = 종일, else "HH:MM"
+let bookingTypeMode = "job"; // "job" | "quote"
 let materialType = "망";
 let editingMaterialId = null;
 let editingFuelId = null;
 let editingAdId = null;
+let editingMiscId = null;
 
 /* 시간 선택 칩 목록: 종일 + 07:00 ~ 21:00 (1시간 단위) */
 const TIME_SLOTS = ["종일"];
@@ -679,6 +760,7 @@ function fmtDateLabel(d){
 }
 
 function statusTag(b){
+  if (b.is_quote) return `<span class="tag quote">${ICON_QUOTE}견적</span>`;
   const isCancelled = b.status === "cancelled";
   if (isCancelled) return `<span class="tag cancelled">${ICON_X}취소됨</span>`;
   const paid = b.payment_status === "paid";
@@ -757,14 +839,23 @@ async function fetchAdCosts(){
   renderAll();
 }
 
+async function fetchMiscCosts(){
+  if (!sb) { renderAll(); return; }
+  const { data, error } = await sb
+    .from("misc_costs")
+    .select("*")
+    .order("month", { ascending:false });
+  if (error) { console.error(error); return; }
+  miscCosts = data || [];
+  renderAll();
+}
+
 function renderAll(){
   renderCalendar();
   renderDayList();
   renderSummary();
   renderDashboard();
-  renderMaterials();
-  renderFuel();
-  renderAd();
+  renderMaterialsTab();
 }
 
 /* ------------------ 탭 전환 ------------------ */
@@ -819,11 +910,14 @@ function renderCalendar(){
     if (iso === selectedDate) cell.classList.add("selected");
 
     const dayBookings = bookingsForDate(iso);
-    const confirmedList = dayBookings.filter(b=>b.status==="confirmed");
+    const confirmedList = dayBookings.filter(b=>b.status==="confirmed" && !b.is_quote);
+    const quoteList = dayBookings.filter(b=>b.is_quote);
     let dotHtml = "";
     if (confirmedList.length){
       const hasPending = confirmedList.some(b=>b.payment_status==="pending");
       dotHtml = `<div class="dot" style="background:${hasPending ? 'var(--pending)' : 'var(--paid)'}"></div>`;
+    } else if (quoteList.length){
+      dotHtml = `<div class="dot" style="background:var(--quote)"></div>`;
     } else if (dayBookings.length){
       dotHtml = `<div class="dot" style="background:#d4d4d3"></div>`;
     }
@@ -952,12 +1046,19 @@ function adCostForMonth(y, m){
   return entry ? Number(entry.amount||0) : 0;
 }
 
+function miscCostForMonth(y, m){
+  const key = `${y}-${pad(m+1)}-01`;
+  const entry = miscCosts.find(f=> f.month === key);
+  return entry ? Number(entry.amount||0) : 0;
+}
+
 function renderDashboard(){
   const y = dashboardCursor.getFullYear();
   const m = dashboardCursor.getMonth();
   document.getElementById("dashMonthLabel").textContent = `${y}년 ${m+1}월`;
 
   const monthBookings = bookings.filter(b=>{
+    if (b.is_quote) return false;
     const d = parseISODate(b.date);
     return d.getFullYear()===y && d.getMonth()===m;
   });
@@ -982,12 +1083,13 @@ function renderDashboard(){
   const materialSum = materialSumForMonth(y, m);
   const fuelSum = fuelCostForMonth(y, m);
   const adSum = adCostForMonth(y, m);
-  const profit = revenue - fuelSum - skyLiftSum - materialSum - adSum;
+  const miscSum = miscCostForMonth(y, m);
+  const profit = revenue - fuelSum - skyLiftSum - materialSum - adSum - miscSum;
   const margin = revenue > 0 ? (profit / revenue * 100) : 0;
 
   document.getElementById("dashProfit").textContent = fmtMoney(profit);
   document.getElementById("dashProfitSub").textContent =
-    `이익률 ${margin.toFixed(1)}% · 주유 ${fmtMoney(fuelSum)} · 스카이차 ${fmtMoney(skyLiftSum)} · 자재 ${fmtMoney(materialSum)} · 광고 ${fmtMoney(adSum)}`;
+    `이익률 ${margin.toFixed(1)}% · 주유 ${fmtMoney(fuelSum)} · 스카이차 ${fmtMoney(skyLiftSum)} · 자재 ${fmtMoney(materialSum)} · 광고 ${fmtMoney(adSum)} · 기타 ${fmtMoney(miscSum)}`;
 
   const listEl = document.getElementById("dashPendingList");
   listEl.innerHTML = "";
@@ -1005,6 +1107,7 @@ function bookingCard(b){
   const isCancelled = b.status==="cancelled";
   const timeLabel = b.time ? b.time.slice(0,5) : "종일";
   const locCustomer = [b.location, b.customer_name].filter(Boolean).map(escapeHtml).join(" · ");
+  const amountHtml = b.is_quote ? "" : `<div class="amount">${fmtMoney(b.amount)}</div>`;
 
   card.innerHTML = `
     <div class="tag-row">
@@ -1014,7 +1117,7 @@ function bookingCard(b){
     <div class="title ${isCancelled?'cancelled':''}">${escapeHtml(b.title||"(제목 없음)")}</div>
     <div class="row-bottom">
       <div class="customer">${locCustomer || "-"}</div>
-      <div class="amount">${fmtMoney(b.amount)}</div>
+      ${amountHtml}
     </div>
   `;
   card.addEventListener("click", ()=> openDetail(b));
@@ -1027,8 +1130,9 @@ function bookingCardCompact(b){
   card.className = "card-compact";
   const isCancelled = b.status==="cancelled";
   const paid = b.payment_status==="paid";
-  const dotColor = isCancelled ? "var(--cancelled)" : (paid ? "var(--paid)" : "var(--pending)");
+  const dotColor = b.is_quote ? "var(--quote)" : (isCancelled ? "var(--cancelled)" : (paid ? "var(--paid)" : "var(--pending)"));
   const timeLabel = b.time ? b.time.slice(0,5) : "종일";
+  const amountHtml = b.is_quote ? "" : `<span class="amount">${fmtMoney(b.amount)}</span>`;
 
   card.innerHTML = `
     <div class="left">
@@ -1036,7 +1140,7 @@ function bookingCardCompact(b){
       <span class="title ${isCancelled?'cancelled':''}">${escapeHtml(b.title||"(제목 없음)")}</span>
     </div>
     <div class="right">
-      <span class="amount">${fmtMoney(b.amount)}</span>
+      ${amountHtml}
       <span class="dot" style="background:${dotColor}"></span>
     </div>
   `;
@@ -1057,10 +1161,29 @@ document.getElementById("cancelAdd").addEventListener("click", ()=>{
   modalAdd.classList.remove("show");
 });
 
+function renderBookingTypeSeg(){
+  document.querySelectorAll("#bookingTypeSeg button").forEach(b=>{
+    const isActive = b.dataset.type === bookingTypeMode;
+    b.classList.toggle("active", isActive);
+    b.classList.toggle("quote-active", isActive && b.dataset.type === "quote");
+  });
+  document.getElementById("jobOnlyFields").style.display = bookingTypeMode === "quote" ? "none" : "block";
+  const isEdit = !!editingId;
+  const isQuote = bookingTypeMode === "quote";
+  document.getElementById("addModalTitle").textContent =
+    isEdit ? (isQuote ? "견적 수정" : "일정 수정") : (isQuote ? "견적 추가" : "새 일정 추가");
+}
+document.querySelectorAll("#bookingTypeSeg button").forEach(b=>{
+  b.addEventListener("click", ()=>{
+    bookingTypeMode = b.dataset.type;
+    renderBookingTypeSeg();
+  });
+});
+
 function openAddModal(editBooking){
   if (editBooking){
     editingId = editBooking.id;
-    document.getElementById("addModalTitle").textContent = "일정 수정";
+    bookingTypeMode = editBooking.is_quote ? "quote" : "job";
     document.getElementById("fDate").value = editBooking.date;
     selectedTime = editBooking.time ? editBooking.time.slice(0,5) : "";
     document.getElementById("fTitle").value = editBooking.title || "";
@@ -1070,7 +1193,7 @@ function openAddModal(editBooking){
     document.getElementById("fAmount").value = editBooking.amount || "";
   } else {
     editingId = null;
-    document.getElementById("addModalTitle").textContent = "새 일정 추가";
+    bookingTypeMode = "job";
     document.getElementById("fDate").value = selectedDate || toISODate(new Date());
     selectedTime = "";
     document.getElementById("fTitle").value = "";
@@ -1080,17 +1203,19 @@ function openAddModal(editBooking){
     document.getElementById("fAmount").value = "";
   }
   renderTimeChips();
+  renderBookingTypeSeg();
   modalAdd.classList.add("show");
 }
 
 document.getElementById("saveBooking").addEventListener("click", async ()=>{
+  const isQuote = bookingTypeMode === "quote";
   const date = document.getElementById("fDate").value;
   const time = selectedTime || null;
   const title = document.getElementById("fTitle").value.trim();
   const location = document.getElementById("fLocation").value.trim();
-  const customer_name = document.getElementById("fCustomer").value.trim();
-  const sky_lift_cost = Number(document.getElementById("fSkyLift").value || 0);
-  const amount = Number(document.getElementById("fAmount").value || 0);
+  const customer_name = isQuote ? null : document.getElementById("fCustomer").value.trim();
+  const sky_lift_cost = isQuote ? 0 : Number(document.getElementById("fSkyLift").value || 0);
+  const amount = isQuote ? 0 : Number(document.getElementById("fAmount").value || 0);
 
   if (!date || !title){
     alert("날짜와 제목은 필수입니다.");
@@ -1105,12 +1230,12 @@ document.getElementById("saveBooking").addEventListener("click", async ()=>{
   let error;
   if (editingId){
     ({ error } = await sb.from("bookings")
-      .update({ date, time, title, location, customer_name, sky_lift_cost, amount })
+      .update({ date, time, title, location, customer_name, sky_lift_cost, amount, is_quote: isQuote })
       .eq("id", editingId));
   } else {
     ({ error } = await sb.from("bookings").insert([{
       date, time, title, location, customer_name, sky_lift_cost, amount,
-      status:"confirmed", payment_status:"pending"
+      status:"confirmed", payment_status:"pending", is_quote: isQuote
     }]));
   }
   if (error){ alert("저장 실패: " + error.message); return; }
@@ -1147,13 +1272,13 @@ function openDetail(b){
     <div class="detail-row"><div class="k">날짜</div><div class="v">${fmtDateLabel(d)}</div></div>
     ${b.time ? `<div class="detail-row"><div class="k">시간</div><div class="v">${b.time.slice(0,5)}</div></div>` : ""}
     <div class="detail-row"><div class="k">위치</div><div class="v">${escapeHtml(b.location||"-")}</div></div>
-    <div class="detail-row"><div class="k">예약자</div><div class="v">${escapeHtml(b.customer_name||"-")}</div></div>
-    <div class="detail-row"><div class="k">금액</div><div class="v">${fmtMoney(b.amount)}</div></div>
-    ${Number(b.sky_lift_cost) ? `<div class="detail-row"><div class="k">스카이차비</div><div class="v">${fmtMoney(b.sky_lift_cost)}</div></div>` : ""}
+    ${!b.is_quote ? `<div class="detail-row"><div class="k">예약자</div><div class="v">${escapeHtml(b.customer_name||"-")}</div></div>` : ""}
+    ${!b.is_quote ? `<div class="detail-row"><div class="k">금액</div><div class="v">${fmtMoney(b.amount)}</div></div>` : ""}
+    ${!b.is_quote && Number(b.sky_lift_cost) ? `<div class="detail-row"><div class="k">스카이차비</div><div class="v">${fmtMoney(b.sky_lift_cost)}</div></div>` : ""}
   `;
 
   const paymentRow = document.getElementById("paymentSwitchRow");
-  if (isCancelled){
+  if (isCancelled || b.is_quote){
     paymentRow.style.display = "none";
   } else {
     paymentRow.style.display = "flex";
@@ -1223,6 +1348,35 @@ document.getElementById("restoreBookingBtn").addEventListener("click", async ()=
   await fetchBookings();
 });
 
+/* ------------------ 자재 탭 (월별 네비게이션) ------------------ */
+document.getElementById("matPrev").addEventListener("click", ()=>{
+  materialsCursor.setMonth(materialsCursor.getMonth()-1);
+  renderMaterialsTab();
+});
+document.getElementById("matNext").addEventListener("click", ()=>{
+  materialsCursor.setMonth(materialsCursor.getMonth()+1);
+  renderMaterialsTab();
+});
+document.getElementById("matThisMonthBtn").addEventListener("click", ()=>{
+  materialsCursor = new Date();
+  renderMaterialsTab();
+});
+
+function isSameMonth(dateStr, y, m){
+  const d = parseISODate(dateStr);
+  return d.getFullYear()===y && d.getMonth()===m;
+}
+
+function renderMaterialsTab(){
+  const y = materialsCursor.getFullYear();
+  const m = materialsCursor.getMonth();
+  document.getElementById("matMonthLabel").textContent = `${y}년 ${m+1}월`;
+  renderMaterials();
+  renderFuel();
+  renderAd();
+  renderMisc();
+}
+
 /* ------------------ 자재 구입 이력 ------------------ */
 const modalMaterial = document.getElementById("modalMaterial");
 
@@ -1245,6 +1399,7 @@ function openMaterialModal(m){
     document.getElementById("mDate").value = m.date;
     materialType = m.type;
     document.getElementById("mAmount").value = m.amount;
+    document.getElementById("mNote").value = m.note || "";
     document.getElementById("deleteMaterialBtn").style.display = "block";
   } else {
     editingMaterialId = null;
@@ -1252,6 +1407,7 @@ function openMaterialModal(m){
     document.getElementById("mDate").value = toISODate(new Date());
     materialType = "망";
     document.getElementById("mAmount").value = "";
+    document.getElementById("mNote").value = "";
     document.getElementById("deleteMaterialBtn").style.display = "none";
   }
   renderMaterialTypeSeg();
@@ -1267,17 +1423,18 @@ document.getElementById("cancelMaterial").addEventListener("click", ()=>{
 document.getElementById("saveMaterial").addEventListener("click", async ()=>{
   const date = document.getElementById("mDate").value;
   const amount = Number(document.getElementById("mAmount").value || 0);
+  const note = document.getElementById("mNote").value.trim() || null;
   if (!date){ alert("날짜를 선택해주세요."); return; }
   if (!sb){ alert("Supabase 연결이 설정되지 않아 저장할 수 없습니다."); return; }
 
   let error;
   if (editingMaterialId){
     ({ error } = await sb.from("materials")
-      .update({ date, type: materialType, amount })
+      .update({ date, type: materialType, amount, note })
       .eq("id", editingMaterialId));
   } else {
     ({ error } = await sb.from("materials")
-      .insert([{ date, type: materialType, amount }]));
+      .insert([{ date, type: materialType, amount, note }]));
   }
   if (error){ alert("저장 실패: " + error.message); return; }
 
@@ -1300,18 +1457,22 @@ function renderMaterials(){
   const container = document.getElementById("materialList");
   if (!container) return;
   container.innerHTML = "";
-  if (materials.length === 0){
-    container.innerHTML = `<div class="empty-state">등록된 자재 구입 내역이 없습니다.</div>`;
+  const y = materialsCursor.getFullYear();
+  const mo = materialsCursor.getMonth();
+  const filtered = materials.filter(m=> isSameMonth(m.date, y, mo));
+  if (filtered.length === 0){
+    container.innerHTML = `<div class="empty-state">이번 달 자재 구입 내역이 없습니다.</div>`;
     return;
   }
-  materials.forEach(m=>{
+  filtered.forEach(m=>{
     const row = document.createElement("div");
     row.className = "list-row";
     const d = parseISODate(m.date);
+    const secondary = `${d.getMonth()+1}월 ${d.getDate()}일` + (m.note ? ` · ${escapeHtml(m.note)}` : "");
     row.innerHTML = `
       <div class="info">
         <span class="primary">${escapeHtml(m.type)} 구입</span>
-        <span class="secondary">${d.getMonth()+1}월 ${d.getDate()}일</span>
+        <span class="secondary">${secondary}</span>
       </div>
       <div class="right">
         <span class="amount">${fmtMoney(m.amount)}</span>
@@ -1341,13 +1502,14 @@ function openFuelModal(f){
     document.getElementById("fuelModalTitle").textContent = "주유비 수정";
     document.getElementById("fuelMonth").value = f.month.slice(0,7);
     document.getElementById("fuelAmount").value = f.amount;
+    document.getElementById("fuelNote").value = f.note || "";
     document.getElementById("deleteFuelBtn").style.display = "block";
   } else {
     editingFuelId = null;
     document.getElementById("fuelModalTitle").textContent = "주유비 입력";
-    const now = new Date();
-    document.getElementById("fuelMonth").value = `${now.getFullYear()}-${pad(now.getMonth()+1)}`;
+    document.getElementById("fuelMonth").value = `${materialsCursor.getFullYear()}-${pad(materialsCursor.getMonth()+1)}`;
     document.getElementById("fuelAmount").value = "";
+    document.getElementById("fuelNote").value = "";
     document.getElementById("deleteFuelBtn").style.display = "none";
   }
   modalFuel.classList.add("show");
@@ -1362,6 +1524,7 @@ document.getElementById("cancelFuel").addEventListener("click", ()=>{
 document.getElementById("saveFuel").addEventListener("click", async ()=>{
   const monthVal = document.getElementById("fuelMonth").value; // "YYYY-MM"
   const amount = Number(document.getElementById("fuelAmount").value || 0);
+  const note = document.getElementById("fuelNote").value.trim() || null;
   if (!monthVal){ alert("월을 선택해주세요."); return; }
   if (!sb){ alert("Supabase 연결이 설정되지 않아 저장할 수 없습니다."); return; }
 
@@ -1369,11 +1532,11 @@ document.getElementById("saveFuel").addEventListener("click", async ()=>{
   let error;
   if (editingFuelId){
     ({ error } = await sb.from("fuel_costs")
-      .update({ month: monthDate, amount })
+      .update({ month: monthDate, amount, note })
       .eq("id", editingFuelId));
   } else {
     ({ error } = await sb.from("fuel_costs")
-      .upsert({ month: monthDate, amount }, { onConflict: "month" }));
+      .upsert({ month: monthDate, amount, note }, { onConflict: "month" }));
   }
   if (error){ alert("저장 실패: " + error.message); return; }
 
@@ -1396,17 +1559,22 @@ function renderFuel(){
   const container = document.getElementById("fuelList");
   if (!container) return;
   container.innerHTML = "";
-  if (fuelCosts.length === 0){
-    container.innerHTML = `<div class="empty-state">등록된 주유 이력이 없습니다.</div>`;
+  const y = materialsCursor.getFullYear();
+  const mo0 = materialsCursor.getMonth();
+  const key = `${y}-${pad(mo0+1)}-01`;
+  const filtered = fuelCosts.filter(f=> f.month === key);
+  if (filtered.length === 0){
+    container.innerHTML = `<div class="empty-state">이번 달 주유비 기록이 없습니다.</div>`;
     return;
   }
-  fuelCosts.forEach(f=>{
+  filtered.forEach(f=>{
     const row = document.createElement("div");
     row.className = "list-row";
     const [yy, mo] = f.month.split("-");
     row.innerHTML = `
       <div class="info">
         <span class="primary">${Number(yy)}년 ${Number(mo)}월 주유비</span>
+        ${f.note ? `<span class="secondary">${escapeHtml(f.note)}</span>` : ""}
       </div>
       <div class="right">
         <span class="amount">${fmtMoney(f.amount)}</span>
@@ -1436,13 +1604,14 @@ function openAdModal(a){
     document.getElementById("adModalTitle").textContent = "광고비 수정";
     document.getElementById("adMonth").value = a.month.slice(0,7);
     document.getElementById("adAmount").value = a.amount;
+    document.getElementById("adNote").value = a.note || "";
     document.getElementById("deleteAdBtn").style.display = "block";
   } else {
     editingAdId = null;
     document.getElementById("adModalTitle").textContent = "광고비 입력";
-    const now = new Date();
-    document.getElementById("adMonth").value = `${now.getFullYear()}-${pad(now.getMonth()+1)}`;
+    document.getElementById("adMonth").value = `${materialsCursor.getFullYear()}-${pad(materialsCursor.getMonth()+1)}`;
     document.getElementById("adAmount").value = "";
+    document.getElementById("adNote").value = "";
     document.getElementById("deleteAdBtn").style.display = "none";
   }
   modalAd.classList.add("show");
@@ -1457,6 +1626,7 @@ document.getElementById("cancelAd").addEventListener("click", ()=>{
 document.getElementById("saveAd").addEventListener("click", async ()=>{
   const monthVal = document.getElementById("adMonth").value; // "YYYY-MM"
   const amount = Number(document.getElementById("adAmount").value || 0);
+  const note = document.getElementById("adNote").value.trim() || null;
   if (!monthVal){ alert("월을 선택해주세요."); return; }
   if (!sb){ alert("Supabase 연결이 설정되지 않아 저장할 수 없습니다."); return; }
 
@@ -1464,11 +1634,11 @@ document.getElementById("saveAd").addEventListener("click", async ()=>{
   let error;
   if (editingAdId){
     ({ error } = await sb.from("ad_costs")
-      .update({ month: monthDate, amount })
+      .update({ month: monthDate, amount, note })
       .eq("id", editingAdId));
   } else {
     ({ error } = await sb.from("ad_costs")
-      .upsert({ month: monthDate, amount }, { onConflict: "month" }));
+      .upsert({ month: monthDate, amount, note }, { onConflict: "month" }));
   }
   if (error){ alert("저장 실패: " + error.message); return; }
 
@@ -1491,17 +1661,22 @@ function renderAd(){
   const container = document.getElementById("adList");
   if (!container) return;
   container.innerHTML = "";
-  if (adCosts.length === 0){
-    container.innerHTML = `<div class="empty-state">등록된 광고비 이력이 없습니다.</div>`;
+  const y = materialsCursor.getFullYear();
+  const mo0 = materialsCursor.getMonth();
+  const key = `${y}-${pad(mo0+1)}-01`;
+  const filtered = adCosts.filter(a=> a.month === key);
+  if (filtered.length === 0){
+    container.innerHTML = `<div class="empty-state">이번 달 광고비 기록이 없습니다.</div>`;
     return;
   }
-  adCosts.forEach(a=>{
+  filtered.forEach(a=>{
     const row = document.createElement("div");
     row.className = "list-row";
     const [yy, mo] = a.month.split("-");
     row.innerHTML = `
       <div class="info">
         <span class="primary">${Number(yy)}년 ${Number(mo)}월 광고비</span>
+        ${a.note ? `<span class="secondary">${escapeHtml(a.note)}</span>` : ""}
       </div>
       <div class="right">
         <span class="amount">${fmtMoney(a.amount)}</span>
@@ -1517,6 +1692,108 @@ function renderAd(){
       const { error } = await sb.from("ad_costs").delete().eq("id", a.id);
       if (error){ alert("삭제 실패: " + error.message); return; }
       await fetchAdCosts();
+    });
+    container.appendChild(row);
+  });
+}
+
+/* ------------------ 기타비 ------------------ */
+const modalMisc = document.getElementById("modalMisc");
+
+function openMiscModal(a){
+  if (a){
+    editingMiscId = a.id;
+    document.getElementById("miscModalTitle").textContent = "기타비 수정";
+    document.getElementById("miscMonth").value = a.month.slice(0,7);
+    document.getElementById("miscAmount").value = a.amount;
+    document.getElementById("miscNote").value = a.note || "";
+    document.getElementById("deleteMiscBtn").style.display = "block";
+  } else {
+    editingMiscId = null;
+    document.getElementById("miscModalTitle").textContent = "기타비 입력";
+    document.getElementById("miscMonth").value = `${materialsCursor.getFullYear()}-${pad(materialsCursor.getMonth()+1)}`;
+    document.getElementById("miscAmount").value = "";
+    document.getElementById("miscNote").value = "";
+    document.getElementById("deleteMiscBtn").style.display = "none";
+  }
+  modalMisc.classList.add("show");
+}
+
+document.getElementById("addMiscBtn").addEventListener("click", ()=> openMiscModal());
+document.getElementById("cancelMisc").addEventListener("click", ()=>{
+  editingMiscId = null;
+  modalMisc.classList.remove("show");
+});
+
+document.getElementById("saveMisc").addEventListener("click", async ()=>{
+  const monthVal = document.getElementById("miscMonth").value; // "YYYY-MM"
+  const amount = Number(document.getElementById("miscAmount").value || 0);
+  const note = document.getElementById("miscNote").value.trim() || null;
+  if (!monthVal){ alert("월을 선택해주세요."); return; }
+  if (!sb){ alert("Supabase 연결이 설정되지 않아 저장할 수 없습니다."); return; }
+
+  const monthDate = monthVal + "-01";
+  let error;
+  if (editingMiscId){
+    ({ error } = await sb.from("misc_costs")
+      .update({ month: monthDate, amount, note })
+      .eq("id", editingMiscId));
+  } else {
+    ({ error } = await sb.from("misc_costs")
+      .upsert({ month: monthDate, amount, note }, { onConflict: "month" }));
+  }
+  if (error){ alert("저장 실패: " + error.message); return; }
+
+  modalMisc.classList.remove("show");
+  editingMiscId = null;
+  await fetchMiscCosts();
+});
+
+document.getElementById("deleteMiscBtn").addEventListener("click", async ()=>{
+  if (!editingMiscId || !sb) return;
+  if (!confirm("이 기타비 이력을 삭제하시겠어요?")) return;
+  const { error } = await sb.from("misc_costs").delete().eq("id", editingMiscId);
+  if (error){ alert("삭제 실패: " + error.message); return; }
+  modalMisc.classList.remove("show");
+  editingMiscId = null;
+  await fetchMiscCosts();
+});
+
+function renderMisc(){
+  const container = document.getElementById("miscList");
+  if (!container) return;
+  container.innerHTML = "";
+  const y = materialsCursor.getFullYear();
+  const mo0 = materialsCursor.getMonth();
+  const key = `${y}-${pad(mo0+1)}-01`;
+  const filtered = miscCosts.filter(a=> a.month === key);
+  if (filtered.length === 0){
+    container.innerHTML = `<div class="empty-state">이번 달 기타비 기록이 없습니다.</div>`;
+    return;
+  }
+  filtered.forEach(a=>{
+    const row = document.createElement("div");
+    row.className = "list-row";
+    const [yy, mo] = a.month.split("-");
+    row.innerHTML = `
+      <div class="info">
+        <span class="primary">${Number(yy)}년 ${Number(mo)}월 기타비</span>
+        ${a.note ? `<span class="secondary">${escapeHtml(a.note)}</span>` : ""}
+      </div>
+      <div class="right">
+        <span class="amount">${fmtMoney(a.amount)}</span>
+        <button class="del-btn">${ICON_X}</button>
+      </div>
+    `;
+    row.querySelector(".info").addEventListener("click", ()=> openMiscModal(a));
+    row.querySelector(".amount").addEventListener("click", ()=> openMiscModal(a));
+    row.querySelector(".del-btn").addEventListener("click", async (e)=>{
+      e.stopPropagation();
+      if (!sb) return;
+      if (!confirm("이 기타비 이력을 삭제하시겠어요?")) return;
+      const { error } = await sb.from("misc_costs").delete().eq("id", a.id);
+      if (error){ alert("삭제 실패: " + error.message); return; }
+      await fetchMiscCosts();
     });
     container.appendChild(row);
   });
@@ -1547,6 +1824,12 @@ if (sb){
       fetchAdCosts();
     })
     .subscribe();
+
+  sb.channel("misc-costs-realtime")
+    .on("postgres_changes", { event:"*", schema:"public", table:"misc_costs" }, ()=>{
+      fetchMiscCosts();
+    })
+    .subscribe();
 }
 
 /* ------------------ 시작 ------------------ */
@@ -1554,6 +1837,7 @@ fetchBookings();
 fetchMaterials();
 fetchFuelCosts();
 fetchAdCosts();
+fetchMiscCosts();
 </script>
 </body>
 </html>

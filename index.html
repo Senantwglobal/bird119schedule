@@ -363,6 +363,12 @@
         <button class="mini-btn" id="addFuelBtn">+ 주유비 입력</button>
       </div>
       <div id="fuelList"></div>
+
+      <div class="section-head" style="margin-top:32px;">
+        <h2>광고비 (월별)</h2>
+        <button class="mini-btn" id="addAdBtn">+ 광고비 입력</button>
+      </div>
+      <div id="adList"></div>
     </section>
 
     <!-- ===== 대시보드 탭 ===== -->
@@ -545,7 +551,6 @@
         <button type="button" data-type="망">망</button>
         <button type="button" data-type="스파이크">스파이크</button>
         <button type="button" data-type="기타비">기타비</button>
-        <button type="button" data-type="광고비">광고비</button>
       </div>
     </div>
     <div class="field">
@@ -588,6 +593,35 @@
   </div>
 </div>
 
+<!-- ===== 광고비 추가/수정 모달 ===== -->
+<div class="sheet-overlay" id="modalAd">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-topbar">
+      <button class="icon-btn" id="cancelAd">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <h3 id="adModalTitle">광고비 입력</h3>
+      <button class="icon-btn dark" id="saveAd">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
+    </div>
+
+    <div class="field">
+      <label>월</label>
+      <input type="month" id="adMonth" />
+    </div>
+    <div class="field">
+      <label>이번달 총 광고비</label>
+      <div class="amount-wrap">
+        <input type="number" id="adAmount" placeholder="0" inputmode="numeric" />
+        <span>원</span>
+      </div>
+    </div>
+    <button class="btn btn-ghost" id="deleteAdBtn" style="display:none;color:var(--cancelled);">삭제</button>
+  </div>
+</div>
+
 <script>
 /* ============================================================
    CONFIG — Supabase 프로젝트 정보 (Sena Dashboard 프로젝트 — 실제 라이브 DB)
@@ -613,6 +647,7 @@ const ICON_X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 let bookings = [];
 let materials = [];
 let fuelCosts = [];
+let adCosts = [];
 let currentTab = "calendar";
 let calendarCursor = new Date();
 let dashboardCursor = new Date();
@@ -625,6 +660,7 @@ let selectedTime = ""; // "" = 종일, else "HH:MM"
 let materialType = "망";
 let editingMaterialId = null;
 let editingFuelId = null;
+let editingAdId = null;
 
 /* 시간 선택 칩 목록: 종일 + 07:00 ~ 21:00 (1시간 단위) */
 const TIME_SLOTS = ["종일"];
@@ -710,6 +746,17 @@ async function fetchFuelCosts(){
   renderAll();
 }
 
+async function fetchAdCosts(){
+  if (!sb) { renderAll(); return; }
+  const { data, error } = await sb
+    .from("ad_costs")
+    .select("*")
+    .order("month", { ascending:false });
+  if (error) { console.error(error); return; }
+  adCosts = data || [];
+  renderAll();
+}
+
 function renderAll(){
   renderCalendar();
   renderDayList();
@@ -717,6 +764,7 @@ function renderAll(){
   renderDashboard();
   renderMaterials();
   renderFuel();
+  renderAd();
 }
 
 /* ------------------ 탭 전환 ------------------ */
@@ -898,6 +946,12 @@ function fuelCostForMonth(y, m){
   return entry ? Number(entry.amount||0) : 0;
 }
 
+function adCostForMonth(y, m){
+  const key = `${y}-${pad(m+1)}-01`;
+  const entry = adCosts.find(f=> f.month === key);
+  return entry ? Number(entry.amount||0) : 0;
+}
+
 function renderDashboard(){
   const y = dashboardCursor.getFullYear();
   const m = dashboardCursor.getMonth();
@@ -927,12 +981,13 @@ function renderDashboard(){
   const skyLiftSum = skyLiftSumForMonth(y, m);
   const materialSum = materialSumForMonth(y, m);
   const fuelSum = fuelCostForMonth(y, m);
-  const profit = revenue - fuelSum - skyLiftSum - materialSum;
+  const adSum = adCostForMonth(y, m);
+  const profit = revenue - fuelSum - skyLiftSum - materialSum - adSum;
   const margin = revenue > 0 ? (profit / revenue * 100) : 0;
 
   document.getElementById("dashProfit").textContent = fmtMoney(profit);
   document.getElementById("dashProfitSub").textContent =
-    `이익률 ${margin.toFixed(1)}% · 주유 ${fmtMoney(fuelSum)} · 스카이차 ${fmtMoney(skyLiftSum)} · 자재 ${fmtMoney(materialSum)}`;
+    `이익률 ${margin.toFixed(1)}% · 주유 ${fmtMoney(fuelSum)} · 스카이차 ${fmtMoney(skyLiftSum)} · 자재 ${fmtMoney(materialSum)} · 광고 ${fmtMoney(adSum)}`;
 
   const listEl = document.getElementById("dashPendingList");
   listEl.innerHTML = "";
@@ -1372,6 +1427,101 @@ function renderFuel(){
   });
 }
 
+/* ------------------ 광고비 ------------------ */
+const modalAd = document.getElementById("modalAd");
+
+function openAdModal(a){
+  if (a){
+    editingAdId = a.id;
+    document.getElementById("adModalTitle").textContent = "광고비 수정";
+    document.getElementById("adMonth").value = a.month.slice(0,7);
+    document.getElementById("adAmount").value = a.amount;
+    document.getElementById("deleteAdBtn").style.display = "block";
+  } else {
+    editingAdId = null;
+    document.getElementById("adModalTitle").textContent = "광고비 입력";
+    const now = new Date();
+    document.getElementById("adMonth").value = `${now.getFullYear()}-${pad(now.getMonth()+1)}`;
+    document.getElementById("adAmount").value = "";
+    document.getElementById("deleteAdBtn").style.display = "none";
+  }
+  modalAd.classList.add("show");
+}
+
+document.getElementById("addAdBtn").addEventListener("click", ()=> openAdModal());
+document.getElementById("cancelAd").addEventListener("click", ()=>{
+  editingAdId = null;
+  modalAd.classList.remove("show");
+});
+
+document.getElementById("saveAd").addEventListener("click", async ()=>{
+  const monthVal = document.getElementById("adMonth").value; // "YYYY-MM"
+  const amount = Number(document.getElementById("adAmount").value || 0);
+  if (!monthVal){ alert("월을 선택해주세요."); return; }
+  if (!sb){ alert("Supabase 연결이 설정되지 않아 저장할 수 없습니다."); return; }
+
+  const monthDate = monthVal + "-01";
+  let error;
+  if (editingAdId){
+    ({ error } = await sb.from("ad_costs")
+      .update({ month: monthDate, amount })
+      .eq("id", editingAdId));
+  } else {
+    ({ error } = await sb.from("ad_costs")
+      .upsert({ month: monthDate, amount }, { onConflict: "month" }));
+  }
+  if (error){ alert("저장 실패: " + error.message); return; }
+
+  modalAd.classList.remove("show");
+  editingAdId = null;
+  await fetchAdCosts();
+});
+
+document.getElementById("deleteAdBtn").addEventListener("click", async ()=>{
+  if (!editingAdId || !sb) return;
+  if (!confirm("이 광고비 이력을 삭제하시겠어요?")) return;
+  const { error } = await sb.from("ad_costs").delete().eq("id", editingAdId);
+  if (error){ alert("삭제 실패: " + error.message); return; }
+  modalAd.classList.remove("show");
+  editingAdId = null;
+  await fetchAdCosts();
+});
+
+function renderAd(){
+  const container = document.getElementById("adList");
+  if (!container) return;
+  container.innerHTML = "";
+  if (adCosts.length === 0){
+    container.innerHTML = `<div class="empty-state">등록된 광고비 이력이 없습니다.</div>`;
+    return;
+  }
+  adCosts.forEach(a=>{
+    const row = document.createElement("div");
+    row.className = "list-row";
+    const [yy, mo] = a.month.split("-");
+    row.innerHTML = `
+      <div class="info">
+        <span class="primary">${Number(yy)}년 ${Number(mo)}월 광고비</span>
+      </div>
+      <div class="right">
+        <span class="amount">${fmtMoney(a.amount)}</span>
+        <button class="del-btn">${ICON_X}</button>
+      </div>
+    `;
+    row.querySelector(".info").addEventListener("click", ()=> openAdModal(a));
+    row.querySelector(".amount").addEventListener("click", ()=> openAdModal(a));
+    row.querySelector(".del-btn").addEventListener("click", async (e)=>{
+      e.stopPropagation();
+      if (!sb) return;
+      if (!confirm("이 광고비 이력을 삭제하시겠어요?")) return;
+      const { error } = await sb.from("ad_costs").delete().eq("id", a.id);
+      if (error){ alert("삭제 실패: " + error.message); return; }
+      await fetchAdCosts();
+    });
+    container.appendChild(row);
+  });
+}
+
 /* ------------------ 실시간 동기화 ------------------ */
 if (sb){
   sb.channel("bookings-realtime")
@@ -1391,12 +1541,19 @@ if (sb){
       fetchFuelCosts();
     })
     .subscribe();
+
+  sb.channel("ad-costs-realtime")
+    .on("postgres_changes", { event:"*", schema:"public", table:"ad_costs" }, ()=>{
+      fetchAdCosts();
+    })
+    .subscribe();
 }
 
 /* ------------------ 시작 ------------------ */
 fetchBookings();
 fetchMaterials();
 fetchFuelCosts();
+fetchAdCosts();
 </script>
 </body>
 </html>

@@ -28,6 +28,7 @@
     --pending-bg:#fdf1de;
     --cancelled:#e5484d;
     --cancelled-bg:#fdecec;
+    --profit:#0f766e;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;height:100%;}
@@ -145,7 +146,7 @@
 
   .empty-state{color:var(--muted);font-size:13px;text-align:center;padding:30px 0;}
 
-  /* ---- 일정 요약 세그먼트 ---- */
+  /* ---- 일정 요약 세그먼트 / 자재 종류 세그먼트 (공용) ---- */
   .seg2{
     display:flex;gap:4px;margin:14px 0 4px;
     background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px;
@@ -178,9 +179,27 @@
   .stat-card.light{background:var(--card);color:var(--ink);border:1px solid var(--line);}
   .stat-card.light .label{opacity:1;color:var(--muted);}
   .stat-card.light .sub{opacity:1;color:var(--muted);}
+  .stat-card.profit{background:var(--profit);}
   .stat-row{display:flex;gap:10px;}
   .stat-row .stat-card{flex:1;padding:16px;border-radius:20px;}
   .stat-row .value{font-size:19px;}
+
+  /* ---- 자재/주유 리스트 행 ---- */
+  .list-row{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:12px 14px;margin-bottom:8px;
+  }
+  .list-row .info{display:flex;flex-direction:column;gap:2px;min-width:0;cursor:pointer;}
+  .list-row .info .primary{font-size:13.5px;font-weight:600;}
+  .list-row .info .secondary{font-size:11.5px;color:var(--muted);font-weight:300;}
+  .list-row .right{display:flex;align-items:center;gap:10px;flex:none;}
+  .list-row .amount{font-size:13.5px;font-weight:600;cursor:pointer;}
+  .list-row .del-btn{
+    width:26px;height:26px;border-radius:50%;border:none;background:var(--soft);
+    color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;
+  }
+  .list-row .del-btn svg{width:12px;height:12px;}
 
   /* ---- Bottom nav ---- */
   .bottomnav-wrap{
@@ -188,21 +207,22 @@
   }
   .bottomnav{
     display:flex;align-items:center;justify-content:space-around;
-    background:var(--nav);border-radius:999px;padding:8px 8px;
+    background:var(--nav);border-radius:999px;padding:8px 6px;
     box-shadow:0 10px 26px rgba(0,0,0,0.2);
   }
   .nav-item{
     display:flex;flex-direction:column;align-items:center;gap:3px;
-    background:none;border:none;color:#8f8f97;font-size:10.5px;font-weight:300;
-    cursor:pointer;padding:7px 13px;border-radius:14px;
+    background:none;border:none;color:#8f8f97;font-size:10px;font-weight:300;
+    cursor:pointer;padding:7px 9px;border-radius:14px;
   }
   .nav-item.active{color:#fff;}
-  .nav-item svg{width:20px;height:20px;}
+  .nav-item svg{width:19px;height:19px;}
   .nav-fab{
     width:42px;height:42px;border-radius:50%;background:#fff;color:var(--nav);
     border:none;display:flex;align-items:center;justify-content:center;
     cursor:pointer;
     box-shadow:0 2px 8px rgba(0,0,0,0.18);
+    flex:none;
   }
   .nav-fab svg{width:19px;height:19px;}
 
@@ -330,6 +350,21 @@
       <div id="weekList" style="margin-top:16px;"></div>
     </section>
 
+    <!-- ===== 자재/주유 탭 ===== -->
+    <section id="view-materials" class="view">
+      <div class="section-head" style="margin-top:14px;">
+        <h2>자재 구입 이력</h2>
+        <button class="mini-btn" id="addMaterialBtn">+ 구입 추가</button>
+      </div>
+      <div id="materialList"></div>
+
+      <div class="section-head" style="margin-top:32px;">
+        <h2>주유 이력 (월별)</h2>
+        <button class="mini-btn" id="addFuelBtn">+ 주유비 입력</button>
+      </div>
+      <div id="fuelList"></div>
+    </section>
+
     <!-- ===== 대시보드 탭 ===== -->
     <section id="view-dashboard" class="view">
       <div class="month-nav">
@@ -342,6 +377,12 @@
         <div class="label">이번달 총 매출 (취소 제외)</div>
         <div class="value" id="dashRevenue">₩0</div>
         <div class="sub" id="dashRevenueSub">확정 0건</div>
+      </div>
+
+      <div class="stat-card profit">
+        <div class="label">이번달 이익</div>
+        <div class="value" id="dashProfit">₩0</div>
+        <div class="sub" id="dashProfitSub">이익률 0%</div>
       </div>
 
       <div class="stat-row">
@@ -377,6 +418,10 @@
       </button>
       <button class="nav-fab" id="fabAdd">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+      <button class="nav-item" data-tab="materials">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.73Z"/><path d="M3.3 7 12 12l8.7-5"/><path d="M12 22V12"/></svg>
+        자재
       </button>
       <button class="nav-item" data-tab="dashboard">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
@@ -419,6 +464,13 @@
     <div class="field">
       <label>예약자 이름</label>
       <input type="text" id="fCustomer" placeholder="예: 홍길동" />
+    </div>
+    <div class="field">
+      <label>스카이차비</label>
+      <div class="amount-wrap">
+        <input type="number" id="fSkyLift" placeholder="0" inputmode="numeric" />
+        <span>원</span>
+      </div>
     </div>
     <div class="field">
       <label>금액</label>
@@ -469,9 +521,75 @@
   </div>
 </div>
 
+<!-- ===== 자재 구입 추가/수정 모달 ===== -->
+<div class="sheet-overlay" id="modalMaterial">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-topbar">
+      <button class="icon-btn" id="cancelMaterial">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <h3 id="materialModalTitle">자재 구입 추가</h3>
+      <button class="icon-btn dark" id="saveMaterial">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
+    </div>
+
+    <div class="field">
+      <label>날짜</label>
+      <input type="date" id="mDate" />
+    </div>
+    <div class="field">
+      <label>종류</label>
+      <div class="seg2" id="materialTypeSeg">
+        <button type="button" data-type="망">망</button>
+        <button type="button" data-type="스파이크">스파이크</button>
+        <button type="button" data-type="기타비">기타비</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>구매금액</label>
+      <div class="amount-wrap">
+        <input type="number" id="mAmount" placeholder="0" inputmode="numeric" />
+        <span>원</span>
+      </div>
+    </div>
+    <button class="btn btn-ghost" id="deleteMaterialBtn" style="display:none;color:var(--cancelled);">삭제</button>
+  </div>
+</div>
+
+<!-- ===== 주유비 추가/수정 모달 ===== -->
+<div class="sheet-overlay" id="modalFuel">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-topbar">
+      <button class="icon-btn" id="cancelFuel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <h3 id="fuelModalTitle">주유비 입력</h3>
+      <button class="icon-btn dark" id="saveFuel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
+    </div>
+
+    <div class="field">
+      <label>월</label>
+      <input type="month" id="fuelMonth" />
+    </div>
+    <div class="field">
+      <label>이번달 총 주유비</label>
+      <div class="amount-wrap">
+        <input type="number" id="fuelAmount" placeholder="0" inputmode="numeric" />
+        <span>원</span>
+      </div>
+    </div>
+    <button class="btn btn-ghost" id="deleteFuelBtn" style="display:none;color:var(--cancelled);">삭제</button>
+  </div>
+</div>
+
 <script>
 /* ============================================================
-   CONFIG — Supabase 프로젝트 정보를 아래 두 줄에 입력하세요.
+   CONFIG — Supabase 프로젝트 정보 (Sena Dashboard 프로젝트 — 실제 라이브 DB)
    Supabase 대시보드 > Project Settings > API 에서 확인 가능합니다.
    ============================================================ */
 const SUPABASE_URL = "https://afdospdphlkcjyvdlukg.supabase.co";
@@ -492,6 +610,8 @@ const ICON_X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 
 /* ------------------ 상태 ------------------ */
 let bookings = [];
+let materials = [];
+let fuelCosts = [];
 let currentTab = "calendar";
 let calendarCursor = new Date();
 let dashboardCursor = new Date();
@@ -501,6 +621,9 @@ let editingId = null;
 let confirmMode = "cancel"; // "cancel" | "delete"
 let summaryMode = "week"; // "today" | "week"
 let selectedTime = ""; // "" = 종일, else "HH:MM"
+let materialType = "망";
+let editingMaterialId = null;
+let editingFuelId = null;
 
 /* 시간 선택 칩 목록: 종일 + 07:00 ~ 21:00 (1시간 단위) */
 const TIME_SLOTS = ["종일"];
@@ -564,11 +687,35 @@ async function fetchBookings(){
   renderAll();
 }
 
+async function fetchMaterials(){
+  if (!sb) { renderAll(); return; }
+  const { data, error } = await sb
+    .from("materials")
+    .select("*")
+    .order("date", { ascending:false });
+  if (error) { console.error(error); return; }
+  materials = data || [];
+  renderAll();
+}
+
+async function fetchFuelCosts(){
+  if (!sb) { renderAll(); return; }
+  const { data, error } = await sb
+    .from("fuel_costs")
+    .select("*")
+    .order("month", { ascending:false });
+  if (error) { console.error(error); return; }
+  fuelCosts = data || [];
+  renderAll();
+}
+
 function renderAll(){
   renderCalendar();
   renderDayList();
   renderSummary();
   renderDashboard();
+  renderMaterials();
+  renderFuel();
 }
 
 /* ------------------ 탭 전환 ------------------ */
@@ -725,6 +872,31 @@ document.getElementById("dashNext").addEventListener("click", ()=>{
   renderDashboard();
 });
 
+function skyLiftSumForMonth(y, m){
+  return bookings
+    .filter(b=>{
+      if (b.status !== "confirmed") return false;
+      const d = parseISODate(b.date);
+      return d.getFullYear()===y && d.getMonth()===m;
+    })
+    .reduce((s,b)=> s + Number(b.sky_lift_cost||0), 0);
+}
+
+function materialSumForMonth(y, m){
+  return materials
+    .filter(mm=>{
+      const d = parseISODate(mm.date);
+      return d.getFullYear()===y && d.getMonth()===m;
+    })
+    .reduce((s,mm)=> s + Number(mm.amount||0), 0);
+}
+
+function fuelCostForMonth(y, m){
+  const key = `${y}-${pad(m+1)}-01`;
+  const entry = fuelCosts.find(f=> f.month === key);
+  return entry ? Number(entry.amount||0) : 0;
+}
+
 function renderDashboard(){
   const y = dashboardCursor.getFullYear();
   const m = dashboardCursor.getMonth();
@@ -749,6 +921,17 @@ function renderDashboard(){
   document.getElementById("dashPendingCount").textContent = `${pending.length}건`;
   document.getElementById("dashCancelledCount").textContent = `${cancelled.length}건`;
   document.getElementById("dashCancelledAmount").textContent = fmtMoney(cancelledAmount);
+
+  /* ---- 이익 계산: 매출 - 주유비 - 스카이차비 합계 - 자재비 합계 ---- */
+  const skyLiftSum = skyLiftSumForMonth(y, m);
+  const materialSum = materialSumForMonth(y, m);
+  const fuelSum = fuelCostForMonth(y, m);
+  const profit = revenue - fuelSum - skyLiftSum - materialSum;
+  const margin = revenue > 0 ? (profit / revenue * 100) : 0;
+
+  document.getElementById("dashProfit").textContent = fmtMoney(profit);
+  document.getElementById("dashProfitSub").textContent =
+    `이익률 ${margin.toFixed(1)}% · 주유 ${fmtMoney(fuelSum)} · 스카이차 ${fmtMoney(skyLiftSum)} · 자재 ${fmtMoney(materialSum)}`;
 
   const listEl = document.getElementById("dashPendingList");
   listEl.innerHTML = "";
@@ -827,6 +1010,7 @@ function openAddModal(editBooking){
     document.getElementById("fTitle").value = editBooking.title || "";
     document.getElementById("fLocation").value = editBooking.location || "";
     document.getElementById("fCustomer").value = editBooking.customer_name || "";
+    document.getElementById("fSkyLift").value = editBooking.sky_lift_cost || "";
     document.getElementById("fAmount").value = editBooking.amount || "";
   } else {
     editingId = null;
@@ -836,6 +1020,7 @@ function openAddModal(editBooking){
     document.getElementById("fTitle").value = "";
     document.getElementById("fLocation").value = "";
     document.getElementById("fCustomer").value = "";
+    document.getElementById("fSkyLift").value = "";
     document.getElementById("fAmount").value = "";
   }
   renderTimeChips();
@@ -848,6 +1033,7 @@ document.getElementById("saveBooking").addEventListener("click", async ()=>{
   const title = document.getElementById("fTitle").value.trim();
   const location = document.getElementById("fLocation").value.trim();
   const customer_name = document.getElementById("fCustomer").value.trim();
+  const sky_lift_cost = Number(document.getElementById("fSkyLift").value || 0);
   const amount = Number(document.getElementById("fAmount").value || 0);
 
   if (!date || !title){
@@ -863,11 +1049,11 @@ document.getElementById("saveBooking").addEventListener("click", async ()=>{
   let error;
   if (editingId){
     ({ error } = await sb.from("bookings")
-      .update({ date, time, title, location, customer_name, amount })
+      .update({ date, time, title, location, customer_name, sky_lift_cost, amount })
       .eq("id", editingId));
   } else {
     ({ error } = await sb.from("bookings").insert([{
-      date, time, title, location, customer_name, amount,
+      date, time, title, location, customer_name, sky_lift_cost, amount,
       status:"confirmed", payment_status:"pending"
     }]));
   }
@@ -907,6 +1093,7 @@ function openDetail(b){
     <div class="detail-row"><div class="k">위치</div><div class="v">${escapeHtml(b.location||"-")}</div></div>
     <div class="detail-row"><div class="k">예약자</div><div class="v">${escapeHtml(b.customer_name||"-")}</div></div>
     <div class="detail-row"><div class="k">금액</div><div class="v">${fmtMoney(b.amount)}</div></div>
+    ${Number(b.sky_lift_cost) ? `<div class="detail-row"><div class="k">스카이차비</div><div class="v">${fmtMoney(b.sky_lift_cost)}</div></div>` : ""}
   `;
 
   const paymentRow = document.getElementById("paymentSwitchRow");
@@ -980,6 +1167,210 @@ document.getElementById("restoreBookingBtn").addEventListener("click", async ()=
   await fetchBookings();
 });
 
+/* ------------------ 자재 구입 이력 ------------------ */
+const modalMaterial = document.getElementById("modalMaterial");
+
+function renderMaterialTypeSeg(){
+  document.querySelectorAll("#materialTypeSeg button").forEach(b=>{
+    b.classList.toggle("active", b.dataset.type === materialType);
+  });
+}
+document.querySelectorAll("#materialTypeSeg button").forEach(b=>{
+  b.addEventListener("click", ()=>{
+    materialType = b.dataset.type;
+    renderMaterialTypeSeg();
+  });
+});
+
+function openMaterialModal(m){
+  if (m){
+    editingMaterialId = m.id;
+    document.getElementById("materialModalTitle").textContent = "자재 구입 수정";
+    document.getElementById("mDate").value = m.date;
+    materialType = m.type;
+    document.getElementById("mAmount").value = m.amount;
+    document.getElementById("deleteMaterialBtn").style.display = "block";
+  } else {
+    editingMaterialId = null;
+    document.getElementById("materialModalTitle").textContent = "자재 구입 추가";
+    document.getElementById("mDate").value = toISODate(new Date());
+    materialType = "망";
+    document.getElementById("mAmount").value = "";
+    document.getElementById("deleteMaterialBtn").style.display = "none";
+  }
+  renderMaterialTypeSeg();
+  modalMaterial.classList.add("show");
+}
+
+document.getElementById("addMaterialBtn").addEventListener("click", ()=> openMaterialModal());
+document.getElementById("cancelMaterial").addEventListener("click", ()=>{
+  editingMaterialId = null;
+  modalMaterial.classList.remove("show");
+});
+
+document.getElementById("saveMaterial").addEventListener("click", async ()=>{
+  const date = document.getElementById("mDate").value;
+  const amount = Number(document.getElementById("mAmount").value || 0);
+  if (!date){ alert("날짜를 선택해주세요."); return; }
+  if (!sb){ alert("Supabase 연결이 설정되지 않아 저장할 수 없습니다."); return; }
+
+  let error;
+  if (editingMaterialId){
+    ({ error } = await sb.from("materials")
+      .update({ date, type: materialType, amount })
+      .eq("id", editingMaterialId));
+  } else {
+    ({ error } = await sb.from("materials")
+      .insert([{ date, type: materialType, amount }]));
+  }
+  if (error){ alert("저장 실패: " + error.message); return; }
+
+  modalMaterial.classList.remove("show");
+  editingMaterialId = null;
+  await fetchMaterials();
+});
+
+document.getElementById("deleteMaterialBtn").addEventListener("click", async ()=>{
+  if (!editingMaterialId || !sb) return;
+  if (!confirm("이 자재 구입 내역을 삭제하시겠어요?")) return;
+  const { error } = await sb.from("materials").delete().eq("id", editingMaterialId);
+  if (error){ alert("삭제 실패: " + error.message); return; }
+  modalMaterial.classList.remove("show");
+  editingMaterialId = null;
+  await fetchMaterials();
+});
+
+function renderMaterials(){
+  const container = document.getElementById("materialList");
+  if (!container) return;
+  container.innerHTML = "";
+  if (materials.length === 0){
+    container.innerHTML = `<div class="empty-state">등록된 자재 구입 내역이 없습니다.</div>`;
+    return;
+  }
+  materials.forEach(m=>{
+    const row = document.createElement("div");
+    row.className = "list-row";
+    const d = parseISODate(m.date);
+    row.innerHTML = `
+      <div class="info">
+        <span class="primary">${escapeHtml(m.type)} 구입</span>
+        <span class="secondary">${d.getMonth()+1}월 ${d.getDate()}일</span>
+      </div>
+      <div class="right">
+        <span class="amount">${fmtMoney(m.amount)}</span>
+        <button class="del-btn">${ICON_X}</button>
+      </div>
+    `;
+    row.querySelector(".info").addEventListener("click", ()=> openMaterialModal(m));
+    row.querySelector(".amount").addEventListener("click", ()=> openMaterialModal(m));
+    row.querySelector(".del-btn").addEventListener("click", async (e)=>{
+      e.stopPropagation();
+      if (!sb) return;
+      if (!confirm("이 자재 구입 내역을 삭제하시겠어요?")) return;
+      const { error } = await sb.from("materials").delete().eq("id", m.id);
+      if (error){ alert("삭제 실패: " + error.message); return; }
+      await fetchMaterials();
+    });
+    container.appendChild(row);
+  });
+}
+
+/* ------------------ 주유 이력 ------------------ */
+const modalFuel = document.getElementById("modalFuel");
+
+function openFuelModal(f){
+  if (f){
+    editingFuelId = f.id;
+    document.getElementById("fuelModalTitle").textContent = "주유비 수정";
+    document.getElementById("fuelMonth").value = f.month.slice(0,7);
+    document.getElementById("fuelAmount").value = f.amount;
+    document.getElementById("deleteFuelBtn").style.display = "block";
+  } else {
+    editingFuelId = null;
+    document.getElementById("fuelModalTitle").textContent = "주유비 입력";
+    const now = new Date();
+    document.getElementById("fuelMonth").value = `${now.getFullYear()}-${pad(now.getMonth()+1)}`;
+    document.getElementById("fuelAmount").value = "";
+    document.getElementById("deleteFuelBtn").style.display = "none";
+  }
+  modalFuel.classList.add("show");
+}
+
+document.getElementById("addFuelBtn").addEventListener("click", ()=> openFuelModal());
+document.getElementById("cancelFuel").addEventListener("click", ()=>{
+  editingFuelId = null;
+  modalFuel.classList.remove("show");
+});
+
+document.getElementById("saveFuel").addEventListener("click", async ()=>{
+  const monthVal = document.getElementById("fuelMonth").value; // "YYYY-MM"
+  const amount = Number(document.getElementById("fuelAmount").value || 0);
+  if (!monthVal){ alert("월을 선택해주세요."); return; }
+  if (!sb){ alert("Supabase 연결이 설정되지 않아 저장할 수 없습니다."); return; }
+
+  const monthDate = monthVal + "-01";
+  let error;
+  if (editingFuelId){
+    ({ error } = await sb.from("fuel_costs")
+      .update({ month: monthDate, amount })
+      .eq("id", editingFuelId));
+  } else {
+    ({ error } = await sb.from("fuel_costs")
+      .upsert({ month: monthDate, amount }, { onConflict: "month" }));
+  }
+  if (error){ alert("저장 실패: " + error.message); return; }
+
+  modalFuel.classList.remove("show");
+  editingFuelId = null;
+  await fetchFuelCosts();
+});
+
+document.getElementById("deleteFuelBtn").addEventListener("click", async ()=>{
+  if (!editingFuelId || !sb) return;
+  if (!confirm("이 주유 이력을 삭제하시겠어요?")) return;
+  const { error } = await sb.from("fuel_costs").delete().eq("id", editingFuelId);
+  if (error){ alert("삭제 실패: " + error.message); return; }
+  modalFuel.classList.remove("show");
+  editingFuelId = null;
+  await fetchFuelCosts();
+});
+
+function renderFuel(){
+  const container = document.getElementById("fuelList");
+  if (!container) return;
+  container.innerHTML = "";
+  if (fuelCosts.length === 0){
+    container.innerHTML = `<div class="empty-state">등록된 주유 이력이 없습니다.</div>`;
+    return;
+  }
+  fuelCosts.forEach(f=>{
+    const row = document.createElement("div");
+    row.className = "list-row";
+    const [yy, mo] = f.month.split("-");
+    row.innerHTML = `
+      <div class="info">
+        <span class="primary">${Number(yy)}년 ${Number(mo)}월 주유비</span>
+      </div>
+      <div class="right">
+        <span class="amount">${fmtMoney(f.amount)}</span>
+        <button class="del-btn">${ICON_X}</button>
+      </div>
+    `;
+    row.querySelector(".info").addEventListener("click", ()=> openFuelModal(f));
+    row.querySelector(".amount").addEventListener("click", ()=> openFuelModal(f));
+    row.querySelector(".del-btn").addEventListener("click", async (e)=>{
+      e.stopPropagation();
+      if (!sb) return;
+      if (!confirm("이 주유 이력을 삭제하시겠어요?")) return;
+      const { error } = await sb.from("fuel_costs").delete().eq("id", f.id);
+      if (error){ alert("삭제 실패: " + error.message); return; }
+      await fetchFuelCosts();
+    });
+    container.appendChild(row);
+  });
+}
+
 /* ------------------ 실시간 동기화 ------------------ */
 if (sb){
   sb.channel("bookings-realtime")
@@ -987,10 +1378,24 @@ if (sb){
       fetchBookings();
     })
     .subscribe();
+
+  sb.channel("materials-realtime")
+    .on("postgres_changes", { event:"*", schema:"public", table:"materials" }, ()=>{
+      fetchMaterials();
+    })
+    .subscribe();
+
+  sb.channel("fuel-costs-realtime")
+    .on("postgres_changes", { event:"*", schema:"public", table:"fuel_costs" }, ()=>{
+      fetchFuelCosts();
+    })
+    .subscribe();
 }
 
 /* ------------------ 시작 ------------------ */
 fetchBookings();
+fetchMaterials();
+fetchFuelCosts();
 </script>
 </body>
 </html>
